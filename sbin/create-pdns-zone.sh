@@ -234,4 +234,5 @@ else
     ]
 }
 REQUEST_BODY
+echo # move prompt below end of curl output
 fi
