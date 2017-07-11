@@ -196,8 +196,8 @@ if [ $input_errors -gt 0 ]; then
     exit $input_errors
 fi
 
-if zone_exists "$1"; then
-    >&2 echo "Zone '$1' already exists."
+if zone_exists "$ZONE_NAME"; then
+    >&2 echo "Zone '$ZONE_NAME' already exists."
     exit 1
 else
     NAME_SERVERS="\"$PRIMARY_MASTER\""
