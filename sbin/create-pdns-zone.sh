@@ -37,6 +37,8 @@ Options:
     -h                      Print this usage message and exit.
 "
 
+PDNS_CONF=@ETCDIR@/pdns/pdns.conf
+
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
 declare PDNS_API_IP \
@@ -79,6 +81,7 @@ NEGATIVE_TTL_MAX=10800
 HELP=false
 DEBUG=false
 HOSTMASTER_EMAIL=
+
 
 # Validate and process input
 input_errors=0
@@ -151,7 +154,7 @@ while getopts ":h:t:s:r:R:e:n:dC:h" flag; do
             CURL_VERBOSE=-v
         ;;
         C)
-            # FIXME: grab alternate config path
+            PDNS_CONF="$OPTARG"
         ;;
         *)
             >&2 echo "'-$OPTARG' is not a supported option."
@@ -159,6 +162,8 @@ while getopts ":h:t:s:r:R:e:n:dC:h" flag; do
         ;;
     esac
 done
+
+read_pdns_config "$PDNS_CONF"
 
 if [ -z "$HOSTMASTER_EMAIL" ]; then
     HOSTMASTER_EMAIL=$(curl -s --header "X-API-KEY: $PDNS_API_KEY"\

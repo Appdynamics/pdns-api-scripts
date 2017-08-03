@@ -19,8 +19,8 @@ testCreateAndDeleteZone(){
     local NEG_TTL=61
 
     # create a zone and exercise all script params
-    create-pdns-zone.sh -H $HOSTMASTER_EMAIL -t $TTL -s $ZONE_SERIAL -r $REFRESH -R $RETRY -e $EXPIRY -n $NEG_TTL \
-        $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
+    create-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -s $ZONE_SERIAL -r $REFRESH \
+        -R $RETRY -e $EXPIRY -n $NEG_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
     echo "Zone name: $ZONE_NAME"
 
@@ -28,12 +28,14 @@ testCreateAndDeleteZone(){
     $DIG $ZONE_NAME AXFR
 
     # delete zone
-    delete-pdns-zone.sh $ZONE_NAME
+    delete-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
     # FIXME: assert that it's gone
 }
 
 testCreateAndDeleteZoneWithDefaults(){
+    #FIXME: placeholder
+    false
     # create a zone with default options
     # dig it to make sure we get what we expected
     # delete zone

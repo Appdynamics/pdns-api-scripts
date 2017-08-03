@@ -1,10 +1,5 @@
 # FIXME: add license header here
 
-if [[ $(id -u) -ne 0 ]]; then
-    >&2 echo $0 must be run as root to access the PowerDNS REST API
-    exit 1
-fi
-
 # 'declare' variables we set with 'eval' below just to keep the IDE happy
 declare PDNS_API_IP \
     PDNS_API_PORT \
@@ -18,6 +13,7 @@ DIG="dig +noquestion +nocomments +nocmd +nostats"
 read_pdns_config(){
     local API_KEY_CONF
     local CONFIG_ERRORS=false
+
     # set $PDNS_API_IP and $PDNS_API_PORT based on the contents of '@ETCDIR@/pdns/pdns.conf'
     if [ -r "$1" ]; then
         eval $(awk -F = '/^webserver-address=/{print "PDNS_API_IP="$2};/^webserver-port=/{print "PDNS_API_PORT="$2};
@@ -26,7 +22,12 @@ read_pdns_config(){
             # set $PDNS_API_KEY based on the contents of '@ETCDIR@/pdns/pdns.conf.d/api-key.conf'
             eval $(awk -F = '/^api-key=/{print "PDNS_API_KEY="$2"\n"}' "$API_KEY_CONF")
         else
-            >&2 echo "Unable to read PowerDNS API key file '$1'"
+            if [ -f "$1" ]; then
+                >&2 echo "Insufficient permissions to read PowerDNS API key file"
+                >&2 echo "'$1'"
+            else
+                >&2 echo "PowerDNS API key file '$1' does not exist."
+            fi
             return 1
         fi
     else
