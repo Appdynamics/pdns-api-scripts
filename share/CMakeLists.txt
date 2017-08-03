@@ -11,5 +11,3 @@ endforeach()
 foreach(script ${scripts})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${script} DESTINATION ${SHAREDIR})
 endforeach()
-
-add_subdirectory(test)

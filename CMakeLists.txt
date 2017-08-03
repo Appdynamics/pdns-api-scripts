@@ -32,3 +32,4 @@ endif()
 
 add_subdirectory(sbin)
 add_subdirectory(share)
+add_subdirectory(test)
