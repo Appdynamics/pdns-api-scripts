@@ -2,7 +2,9 @@
 
 # pull in common setup code.
 if ! declare -f oneTimeSetup >/dev/null 2>&1; then
+    set -x
     source "$(dirname ${BASH_SOURCE[0]})/setup_and_teardown.sh"
+    set +x
 fi
 
 testCreateAndDeleteZone(){
@@ -19,8 +21,10 @@ testCreateAndDeleteZone(){
     local NEG_TTL=61
 
     # create a zone and exercise all script params
+    set -x
     create-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -s $ZONE_SERIAL -r $REFRESH \
         -R $RETRY -e $EXPIRY -n $NEG_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
+    set +x
 
     echo "Zone name: $ZONE_NAME"
 
