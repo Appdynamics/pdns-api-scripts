@@ -8,7 +8,10 @@ delete-pdns-zone.sh [options] zone.name.tld.
 Deletes the specified PowerDNS zone.
 
 Options:
-    -h  Print this help message, and exit.
+    -d                      Enable additional debugging output.
+    -C </path/to/pdns.conf> Path to alternate PowerDNS configuration file.
+                            Default: @ETCDIR@/pdns/pdns.conf
+    -h                      Print this help message, and exit.
 "
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
@@ -19,9 +22,16 @@ declare PDNS_API_IP \
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
+CURL_VERBOSE=false
+DEBUG=false
+
 input_errors=0
-while getopts ":h" flag; do
+while getopts ":dh" flag; do
     case flag in
+        d)
+            CURL_VERBOSE=-v
+            DEBUG=true
+        ;;
         h)
             echo "$USAGE"
             exit 0

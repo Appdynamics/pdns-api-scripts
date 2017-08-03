@@ -3,32 +3,38 @@
 #FIXME: add license header
 
 USAGE="\
-create-pdns-zone.sh [options] zone.name.tld. hostmaster-email@domain.tld.
-    primary.master.nameserver.tld. [supplementary.master.nameserver1.tld. ...]
+create-pdns-zone.sh [options] zone.name.tld. primary.master.nameserver.tld.
+        [supplementary.master.nameserver1.tld. ...]
 
 Create a new zone in the PowerDNS zone running on localhost with the given
 name, contact email, and primary, master name server's fully-qualified
 hostname.
 
 Options:
-    -t <0-2147483647>   Zone default TTL, in seconds on caching name servers.
-                        Default: 86400, (1 day).
-    -s <1-4294967295>   Zone serial number.  Unsigned 32-bit integer. Maximum
-                        increment: 2147483647. Default: 1
-    -r <1-2147483647>   Slave refresh interval, in seconds.
-                        Default: 1200, (20 minutes)
-    -R <1-2147483647>   Slave retry interval, in seconds, if it fails to
-                        contact the master after receiving a NOTIFY message, or
-                        after the zone's refresh timer has expired.
-                        Default: 180, (3 minutes)
-    -e <1-2147483647>   Expiration time, in seconds, since the last zone
-                        transfer.  Slave servers will stop responding
-                        authoritatively for a zone when this timer expires.
-                        Default: 1209600, (2 weeks)
-    -n <1-10800>        Time, in seconds that a resolver may cache a negative
-                        lookup, (NXDOMAIN), result.  Default: 60, (1 minute).
-    -d                  Enable additional debugging output.
-    -h                  Print this usage message and exit.
+    -H <hostmaster email>   Administrative contact for the DNS zone.
+                            Default specified by PowerDNS's
+                            'default-soa-mail' configuration parameter.
+    -t <0-2147483647>       Zone default TTL, in seconds on caching name
+                            servers. Default: 86400, (1 day).
+    -s <1-4294967295>       Zone serial number.  Unsigned 32-bit integer.
+                            Maximum increment: 2147483647. Default: 1
+    -r <1-2147483647>       Slave refresh interval, in seconds.
+                            Default: 1200, (20 minutes)
+    -R <1-2147483647>       Slave retry interval, in seconds, if it fails to
+                            contact the master after receiving a NOTIFY
+                            message, or after the zone's refresh timer has
+                            expired. Default: 180, (3 minutes)
+    -e <1-2147483647>       Expiration time, in seconds, since the last zone
+                            transfer.  Slave servers will stop responding
+                            authoritatively for a zone when this timer expires.
+                            Default: 1209600, (2 weeks)
+    -n <1-10800>            Time, in seconds that a resolver may cache a
+                            negative lookup, (NXDOMAIN), result.
+                            Default: 60, (1 minute).
+    -d                      Enable additional debugging output.
+    -C </path/to/pdns.conf> Path to alternate PowerDNS configuration file.
+                            Default: @ETCDIR@/pdns/pdns.conf
+    -h                      Print this usage message and exit.
 "
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
@@ -72,11 +78,22 @@ NEGATIVE_TTL_MAX=10800
 
 HELP=false
 DEBUG=false
+HOSTMASTER_EMAIL=
 
 # Validate and process input
 input_errors=0
-while getopts ":t:s:r:R:e:n:dh" flag; do
+while getopts ":h:t:s:r:R:e:n:dC:h" flag; do
     case flag in
+        H)
+            if is_safe_email "$OPTARG"; then
+                HOSTMASTER_EMAIL=$OPTARG
+            else
+                >&2 echo "'$OPTARG' is not a correctly"
+                >&2 echo "formatted or fully-qualified email address."
+                trailing_dot_msg
+                ((input_errors++))
+            fi
+        ;;
         t)
             if test "$OPTARG" -ge $TTL_MIN >/dev/null 2>&1 && test "$OPTARG" -le $TTL_MAX >/dev/null 2>&1; then
                 TTL=$OPTARG
@@ -133,12 +150,25 @@ while getopts ":t:s:r:R:e:n:dh" flag; do
             DEBUG=true
             CURL_VERBOSE=-v
         ;;
+        C)
+            # FIXME: grab alternate config path
+        ;;
         *)
             >&2 echo "'-$OPTARG' is not a supported option."
             ((input_errors++))
         ;;
     esac
 done
+
+if [ -z "$HOSTMASTER_EMAIL" ]; then
+    HOSTMASTER_EMAIL=$(curl -s --header "X-API-KEY: $PDNS_API_KEY"\
+            http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/config | \
+            jq -r '.[] | select(.name=="default-soa-mail").value')
+    if [ -z "$HOSTMASTER_EMAIL" ]; then
+        >&2 echo "Hostmaster email not specified and 'default-soa-mail' not configured in pdns."
+        ((input_errors++))
+    fi
+fi
 
 if $HELP; then
     echo "$USAGE"
@@ -156,15 +186,6 @@ else
     ((input_errors++))
 fi
 
-if is_safe_email "$2"; then
-    HOSTMASTER_EMAIL=$2
-else
-    >&2 echo "'$2' is not a correctly"
-    >&2 echo "formatted or fully-qualified email address."
-    trailing_dot_msg
-    ((input_errors++))
-fi
-
 if is_valid_dns_name "$3"; then
     PRIMARY_MASTER=$3
 else
@@ -174,7 +195,7 @@ else
     ((input_errors++))
 fi
 
-shift 3
+shift 2
 
 # grab and validate supplementary name server args
 i=0

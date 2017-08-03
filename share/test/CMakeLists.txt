@@ -1,5 +1,3 @@
-#FIXME: add license header
-
 # install scripts based on properties fed in from `brew`
 
 # expand installation path @VARIABLE@ references in shell scripts
@@ -9,7 +7,5 @@ foreach(script ${scripts})
 endforeach()
 
 foreach(script ${scripts})
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${script} DESTINATION ${SHAREDIR})
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${script} DESTINATION ${SHAREDIR}/test)
 endforeach()
-
-add_subdirectory(test)
