@@ -5,7 +5,7 @@ PDNS_TEST_DNS_PORT=5353
 PDNS_TEST_HTTP_PORT=8011
 
 # Alias dig for sparse output
-DIG="dig +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PORT"
+DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PORT"
 
 _cleanup(){
     if [ -n "$PDNS_PID" ]; then
