@@ -2,7 +2,7 @@
 
 # pull in common setup code.
 if ! declare -f oneTimeSetup >/dev/null 2>&1; then
-    echo "cwd: $(pwd)"
+    >&2 echo "cwd: $(pwd)"
     set -x
     source "$(dirname ${BASH_SOURCE[0]})/setup_and_teardown.sh"
     set +x
