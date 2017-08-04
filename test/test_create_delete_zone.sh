@@ -8,6 +8,10 @@ if ! declare -f oneTimeSetup >/dev/null 2>&1; then
     set +x
 fi
 
+set -x
+declare -f oneTimeSetup
+set +x
+
 testCreateAndDeleteZone(){
     local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
     local PRIMARY_MASTER=primary.master.$ZONE_NAME

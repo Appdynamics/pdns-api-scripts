@@ -86,7 +86,7 @@ HOSTMASTER_EMAIL=
 # Validate and process input
 input_errors=0
 while getopts ":H:t:s:r:R:e:n:dC:h" flag; do
-    case flag in
+    case $flag in
         H)
             if is_safe_email "$OPTARG"; then
                 HOSTMASTER_EMAIL=$OPTARG
