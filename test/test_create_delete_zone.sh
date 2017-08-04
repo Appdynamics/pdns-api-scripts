@@ -1,11 +1,5 @@
 #!/bin/bash
 
-
-if [ ${#BASH_SOURCE[@]} -eq 1 ]; then
-    # pull in common setup code.
-    source "$(dirname ${BASH_SOURCE[0]})/setup_and_teardown.sh"
-fi
-
 testCreateAndDeleteZone(){
     local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
     local PRIMARY_MASTER=primary.master.$ZONE_NAME
@@ -35,10 +29,6 @@ testCreateAndDeleteZone(){
 
     # FIXME: assert that it's gone
 }
-if [ ${#BASH_SOURCE[@]} -gt 1 ]; then
-    # export so that this test gets picked up by shunit2
-    export -f testCreateAndDeleteZone
-fi
 
 testCreateAndDeleteZoneWithDefaults(){
     #FIXME: placeholder
@@ -48,11 +38,3 @@ testCreateAndDeleteZoneWithDefaults(){
     # delete zone
     # assert that it's gone
 }
-if [ ${#BASH_SOURCE[@]} -gt 1 ]; then
-    # export so that this test gets picked up by shunit2
-    export -f testCreateAndDeleteZoneWithDefaults
-fi
-
-if [ ${#BASH_SOURCE[@]} -eq 1 ]; then
-    source @USR_BINDIR@/shunit2
-fi

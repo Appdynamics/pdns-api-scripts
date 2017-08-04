@@ -15,8 +15,6 @@ _cleanup(){
     >&2 echo "Deleting $PDNS_TEST_DATA_ROOT"
     rm -rf "$PDNS_TEST_DATA_ROOT"
 }
-# push function to global namespace for use by shunit2 and other sourced scripts
-export -f _cleanup
 
 # $1: number of random alphanumeric characters to output
 _random_alphanumeric_chars(){
@@ -26,8 +24,6 @@ _random_alphanumeric_chars(){
         return 1
     fi
 }
-# push function to global namespace for use by shunit2 and other sourced scripts
-export -f _random_alphanumeric_chars
 
 oneTimeSetup(){
     PDNS_TEST_DATA_ROOT="$(mktemp)"
@@ -54,5 +50,3 @@ oneTimeSetup(){
         exit 1
     fi
 }
-# push function to global namespace for use by shunit2 and other sourced scripts
-export -f oneTimeSetup
