@@ -19,7 +19,7 @@ _cleanup(){
 # $1: number of random alphanumeric characters to output
 _random_alphanumeric_chars(){
     if [[ "$1" =~ ^[0-9]+$ ]]; then
-        cat /dev/urandom | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | head -c $1
+        cat /dev/urandom | LC_CTYPE=C tr -dc 'a-z0-9' | head -c $1
     else
         return 1
     fi
