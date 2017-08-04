@@ -2,9 +2,7 @@
 
 # pull in common setup code.
 if ! declare -f oneTimeSetup >/dev/null 2>&1; then
-    set -x
     source "$(dirname ${BASH_SOURCE[0]})/setup_and_teardown.sh"
-    set +x
 fi
 
 testCreateAndDeleteZone(){
@@ -45,3 +43,7 @@ testCreateAndDeleteZoneWithDefaults(){
     # delete zone
     # assert that it's gone
 }
+
+if [ ${#BASH_SOURCE[@]} -eq 1 ]; then
+    source @USR_BINDIR@/shunit2
+fi

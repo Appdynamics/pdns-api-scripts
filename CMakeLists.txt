@@ -18,8 +18,16 @@ if(NOT DEFINED SBINDIR)
     endif()
 endif()
 
-if (NOT DEFINED ETCDIR)
+if(NOT DEFINED ETCDIR)
     set(ETCDIR ${CMAKE_INSTALL_PREFIX}/etc)
+endif()
+
+if(NOT DEFINED USR_BINDIR)
+    if(CMAKE_INSTALL_PREFIX EQUAL "/")
+        set(USR_BINDIR /usr/bin)
+    else()
+        set(USR_BINDIR ${CMAKE_INSTALL_PREFIX}/bin)
+    endif()
 endif()
 
 if (NOT DEFINED PDNS_SQLITE_LIBEXEC)
