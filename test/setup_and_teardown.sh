@@ -4,7 +4,7 @@ declare PDNS_TEST_DATA_ROOT PDNS_PID
 PDNS_TEST_DNS_PORT=5353
 PDNS_TEST_HTTP_PORT=8011
 
-# Alias dig for sparse output
+# Alias dig with recurring options
 DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PORT"
 
 _cleanup(){

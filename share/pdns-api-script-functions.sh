@@ -24,9 +24,9 @@ read_pdns_config(){
         else
             if [ -f "$1" ]; then
                 >&2 echo "Insufficient permissions to read PowerDNS API key file"
-                >&2 echo "'$1'"
+                >&2 echo "'$API_KEY_CONF'"
             else
-                >&2 echo "PowerDNS API key file '$1' does not exist."
+                >&2 echo "PowerDNS API key file '$API_KEY_CONF' does not exist."
             fi
             return 1
         fi
