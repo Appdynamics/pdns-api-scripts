@@ -26,7 +26,7 @@ endforeach()
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/test_all_api_scripts.sh "source ${USR_BINDIR}/shunit2")
 
 # install everything...
-file(GLOB test_scripts RELATIVE ${CMAKE_CURRENT_BINARY_DIR} "test_*.sh")
-foreach(script ${test_scripts})
+file(GLOB install_scripts RELATIVE ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_BINARY_DIR}/test_*.sh")
+foreach(script ${install_scripts})
     install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${script} DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 endforeach()
