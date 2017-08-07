@@ -12,6 +12,8 @@ _cleanup(){
     fi
     >&2 echo "Deleting $PDNS_TEST_DATA_ROOT"
     rm -rf "$PDNS_TEST_DATA_ROOT"
+    # since we displace _shunit_cleanup() with 'trap _cleanup EXIT', call it after test-specific cleanup is complete
+    _shunit_cleanup $1
 }
 
 # $1: number of random alphanumeric characters to output
@@ -38,9 +40,12 @@ oneTimeSetUp(){
 
     # start pdns_server, redirect stdout, stderr to files in $PDNS_TEST_DATA_ROOT and background
     >&2 echo "Starting test pdns_server from $PDNS_TEST_DATA_ROOT"
-    pdns_server --config-dir "$PDNS_CONF_DIR" > "$PDNS_STDOUT" 2> "$PDNS_STDERR"
+    set -x
+    pdns_server --config-dir="$PDNS_CONF_DIR" > "$PDNS_STDOUT" 2> "$PDNS_STDERR" &
     # save PID
     PDNS_PID=$!
+    set +x
+
 
     if ! ps -p $PDNS_PID; then
         >&2 echo "pdns_server failed to start."
