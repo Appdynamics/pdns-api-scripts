@@ -26,7 +26,15 @@ testCreateAndDeleteZone(){
     echo "Zone name: $ZONE_NAME"
 
     # FIXME: dig it and assert we got what we expected
-    $DIG $ZONE_NAME AXFR
+    local DIG_OUT="$($DIG $ZONE_NAME AXFR)"
+    if [ "$DIG_OUT" == "; Transfer failed." ]; then
+        >&2 echo "pdns_server STDOUT:"
+        >&2 cat "$PDNS_STDOUT"
+        >&2 echo "pdns_server STDERR:"
+        >&2 cat "$PDNS_STDERR"
+    else
+        >&2 echo "$DIG_OUT"
+    fi
 
     # delete zone
     delete-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
