@@ -234,12 +234,13 @@ else
     done
 
     # REST CALL to create zone
+    CURL_OUTFILE="$(mktemp)"
     curl $CURL_VERBOSE\
         --request POST\
         --header "Content-Type: application/json"\
         --header "X-API-Key: $PDNS_API_KEY"\
         --data @-\
-        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones <<REQUEST_BODY
+        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones <<REQUEST_BODY |
 {
     "name": "$ZONE_NAME",
     "type": "Zone",
@@ -261,5 +262,9 @@ else
     ]
 }
 REQUEST_BODY
+    jq > "$CURL_OUTFILE"
+    if $DEBUG; then
+        >&2 cat "$CURL_OUTFILE"
+    fi
 echo # move prompt below end of curl output
 fi

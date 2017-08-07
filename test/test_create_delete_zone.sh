@@ -19,7 +19,7 @@ testCreateAndDeleteZone(){
 
     # create a zone and exercise all script params
     set -x
-    create-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -s $ZONE_SERIAL -r $REFRESH \
+    create-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -s $ZONE_SERIAL -r $REFRESH \
         -R $RETRY -e $EXPIRY -n $NEG_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
     set +x
 
