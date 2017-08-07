@@ -47,6 +47,19 @@ declare PDNS_API_IP \
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
+declare CURL_INFILE CURL_OUTFILE
+
+_cleanup(){
+    if [ -f "$CURL_INFILE" ]; then
+        rm -f "$CURL_INFILE"
+    fi
+    if [ -f "$CURL_OUTFILE" ] ; then
+        rm -f "$CURL_OUTFILE"
+    fi
+}
+
+trap _cleanup EXIT
+
 # TODO: RFC822, sections 3.3 and 6 actually allow for many more special
 # characters in the "local-part" token, but supporting all of them takes us to
 # the land of diminishing returns.  If we need to support any RFC822-compliant
@@ -71,7 +84,7 @@ REFRESH_MAX=2147483647
 RETRY=180
 RETRY_MIN=1
 RETRY_MAX=2147483647
-EXIRY=1209600
+EXPIRY=1209600
 EXPIRY_MIN=1
 EXPIRY_MAX=2147483647
 NEGATIVE_TTL=60
@@ -192,10 +205,10 @@ else
     ((input_errors++))
 fi
 
-if is_valid_dns_name "$3"; then
-    PRIMARY_MASTER=$3
+if is_valid_dns_name "$2"; then
+    PRIMARY_MASTER=$2
 else
-    >&2 echo "'$3' is not a correctly"
+    >&2 echo "'$2' is not a correctly"
     >&2 echo "formatted or fully-qualified primary master name server hostname."
     trailing_dot_msg
     ((input_errors++))
@@ -234,13 +247,8 @@ else
     done
 
     # REST CALL to create zone
-    CURL_OUTFILE="$(mktemp)"
-    curl $CURL_VERBOSE\
-        --request POST\
-        --header "Content-Type: application/json"\
-        --header "X-API-Key: $PDNS_API_KEY"\
-        --data @-\
-        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones <<REQUEST_BODY |
+    CURL_INFILE="$(mktemp)"
+    cat > "$CURL_INFILE" <<REQUEST_BODY
 {
     "name": "$ZONE_NAME",
     "type": "Zone",
@@ -255,16 +263,29 @@ else
             "records": [
                 {
                     "disabled": false,
-                    "content": "$PRIMARY_MASTER $HOSTMASTER_EMAIL $SERIAL_NUM $REFRESH $RETRY $EXIRY $NEGATIVE_TTL"
+                    "content": "$PRIMARY_MASTER $HOSTMASTER_EMAIL $SERIAL_NUM $REFRESH $RETRY $EXPIRY $NEGATIVE_TTL"
                 }
             ]
         }
     ]
 }
 REQUEST_BODY
-    jq > "$CURL_OUTFILE"
+
     if $DEBUG; then
-        >&2 cat "$CURL_OUTFILE"
+        >&2 echo "Request body:"
+        >&2 cat "$CURL_INFILE"
     fi
-echo # move prompt below end of curl output
+
+    CURL_OUTFILE="$(mktemp)"
+    curl $CURL_VERBOSE\
+        --request POST\
+        --header "Content-Type: application/json"\
+        --header "X-API-Key: $PDNS_API_KEY"\
+        --data @-\
+        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones < "$CURL_INFILE" > "$CURL_OUTFILE"
+
+    if $DEBUG; then
+        >&2 echo "Response body:"
+        >&2 jq "$CURL_OUTFILE"
+    fi
 fi
