@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ ${#BASH_SOURCE[@]} -eq 1 ]; then
+    source "$(dirname ${BASH_SOURCE[0]})/setup_and_teardown.sh"
+fi
+
 testCreateAndDeleteZone(){
     local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
     local PRIMARY_MASTER=primary.master.$ZONE_NAME
@@ -38,3 +42,7 @@ testCreateAndDeleteZoneWithDefaults(){
     # delete zone
     # assert that it's gone
 }
+
+if [ ${#BASH_SOURCE[@]} -eq 1 ]; then
+    source "@USR_BINDIR@/shunit2"
+fi

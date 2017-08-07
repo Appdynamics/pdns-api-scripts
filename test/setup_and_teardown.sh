@@ -1,5 +1,3 @@
-#!/bin/bash
-
 declare PDNS_TEST_DATA_ROOT PDNS_PID
 PDNS_TEST_DNS_PORT=5353
 PDNS_TEST_HTTP_PORT=8011
@@ -25,7 +23,7 @@ _random_alphanumeric_chars(){
     fi
 }
 
-oneTimeSetup(){
+oneTimeSetUp(){
     PDNS_TEST_DATA_ROOT="$(mktemp)"
     PDNS_CONF_DIR="$PDNS_TEST_DATA_ROOT/conf"
     PDNS_SQLITE_DIR="$PDNS_TEST_DATA_ROOT/var"
