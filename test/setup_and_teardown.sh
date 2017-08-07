@@ -1,5 +1,5 @@
 declare PDNS_TEST_DATA_ROOT PDNS_PID PDNS_STDERR
-PDNS_TEST_DNS_PORT=5353
+PDNS_TEST_DNS_PORT=5354
 PDNS_TEST_HTTP_PORT=8011
 
 
@@ -8,9 +8,11 @@ DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PO
 
 _cleanup(){
     if [ -n "$PDNS_PID" ]; then
-        >&2 echo "Terminating pdns_server pid $PDNS_PID"
-        if ! kill -TERM $PDNS_PID; then
-            cat "$PDNS_STDERR"
+        if kill -TERM $PDNS_PID >/dev/null 2>&1; then
+            >&2 echo "Terminated pdns_server pid $PDNS_PID"
+        else
+            >&2 echo "pdns_server pid $PDNS_PID died prematurely.  STDERR below..."
+            >&2 cat "$PDNS_STDERR"
         fi
     fi
     >&2 echo "Deleting $PDNS_TEST_DATA_ROOT"
