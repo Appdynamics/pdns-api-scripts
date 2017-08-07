@@ -1,6 +1,7 @@
-declare PDNS_TEST_DATA_ROOT PDNS_PID
+declare PDNS_TEST_DATA_ROOT PDNS_PID PDNS_STDERR
 PDNS_TEST_DNS_PORT=5353
 PDNS_TEST_HTTP_PORT=8011
+
 
 # Alias dig with recurring options
 DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PORT"
@@ -8,7 +9,9 @@ DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PO
 _cleanup(){
     if [ -n "$PDNS_PID" ]; then
         >&2 echo "Terminating pdns_server pid $PDNS_PID"
-        kill -TERM $PDNS_PID
+        if ! kill -TERM $PDNS_PID; then
+            cat "$PDNS_STDERR"
+        fi
     fi
     >&2 echo "Deleting $PDNS_TEST_DATA_ROOT"
     rm -rf "$PDNS_TEST_DATA_ROOT"
