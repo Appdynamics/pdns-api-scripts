@@ -13,7 +13,7 @@ _cleanup(){
     >&2 echo "Deleting $PDNS_TEST_DATA_ROOT"
     rm -rf "$PDNS_TEST_DATA_ROOT"
     # since we displace _shunit_cleanup() with 'trap _cleanup EXIT', call it after test-specific cleanup is complete
-    _shunit_cleanup $1
+    _shunit_cleanup EXIT
 }
 
 # $1: number of random alphanumeric characters to output
