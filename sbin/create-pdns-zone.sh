@@ -102,8 +102,8 @@ while getopts ":H:t:s:r:R:e:n:dC:h" flag; do
                 TTL=$OPTARG
             else
                 >&2 echo "Zone default TTL must be an integer from $TTL_MIN to $TTL_MAX."
+                ((input_errors++))
             fi
-            ((input_errors++))
         ;;
         s)
             if test "$OPTARG" -ge $SERIAL_NUM_MIN >/dev/null 2>&1 && \
@@ -111,30 +111,31 @@ while getopts ":H:t:s:r:R:e:n:dC:h" flag; do
                 SERIAL_NUM=$OPTARG
             else
                 >&2 echo "Zone serial number must be an integer from $SERIAL_NUM_MIN to $SERIAL_NUM_MAX."
+                ((input_errors++))
             fi
-            ((input_errors++))
         ;;
         r)
             if test "$OPTARG" -ge $REFRESH_MIN >/dev/null 2>&1 && test "$OPTARG" -le $REFRESH_MAX >/dev/null 2>&1; then
                 REFRESH=$OPTARG
             else
                 >&2 echo "Zone refresh interval must be an integer from $REFRESH_MIN to $REFRESH_MAX."
+                ((input_errors++))
             fi
-            ((input_errors++))
         ;;
         R)
             if test "$OPTARG" -ge $RETRY_MIN >/dev/null 2>&1 && test "$OPTARG" -le $REFRESH_MAX >/dev/null 2>&1; then
                 RETRY=$OPTARG
             else
                 >&2 echo "Zone Retry interval must be an integer from $RETRY_MIN to $REFRESH_MAX."
+                ((input_errors++))
             fi
-            ((input_errors++))
         ;;
         e)
             if test "$OPTARG" -ge $EXPIRY_MIN >/dev/null 2>&1 && test "$OPTARG" -le $EXPIRY_MAX >/dev/null 2>&1; then
                 EXPIRY=$OPTARG
             else
                 >&2 echo "Zone expiry time must be an integer from $EXPIRY_MIN to $EXPIRY_MAX."
+                ((input_errors++))
             fi
         ;;
         n)
@@ -143,8 +144,8 @@ while getopts ":H:t:s:r:R:e:n:dC:h" flag; do
                 NEGATIVE_TTL=$OPTARG
             else
                 >&2 echo "Zone negative answer TTL must be an integer from $NEGATIVE_TTL_MIN to $NEGATIVE_TTL_MAX."
+                ((input_errors++))
             fi
-            ((input_errors++))
         ;;
         h)
             HELP=true
