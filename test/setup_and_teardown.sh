@@ -24,7 +24,7 @@ _random_alphanumeric_chars(){
 }
 
 oneTimeSetUp(){
-    PDNS_TEST_DATA_ROOT="$(mktemp)"
+    PDNS_TEST_DATA_ROOT="$(mktemp -d)"
     PDNS_CONF_DIR="$PDNS_TEST_DATA_ROOT/conf"
     PDNS_SQLITE_DIR="$PDNS_TEST_DATA_ROOT/var"
     PDNS_STDOUT="$PDNS_TEST_DATA_ROOT/pdns.out"
