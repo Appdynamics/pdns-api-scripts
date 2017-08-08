@@ -17,8 +17,6 @@ Options:
                             'default-soa-mail' configuration parameter.
     -t <0-2147483647>       Zone default TTL, in seconds on caching name
                             servers. Default: 86400, (1 day).
-    -s <1-4294967295>       Zone serial number.  Unsigned 32-bit integer.
-                            Maximum increment: 2147483647. Default: 1
     -r <1-2147483647>       Slave refresh interval, in seconds.
                             Default: 1200, (20 minutes)
     -R <1-2147483647>       Slave retry interval, in seconds, if it fails to
@@ -78,9 +76,6 @@ is_safe_email(){
 TTL=86400
 TTL_MIN=0
 TTL_MAX=2147483647
-SERIAL_NUM=1
-SERIAL_NUM_MIN=1
-SERIAL_NUM_MAX=4294967295
 REFRESH=1200
 REFRESH_MIN=1
 REFRESH_MAX=2147483647
@@ -104,7 +99,7 @@ HOSTMASTER_EMAIL=
 
 # Validate and process input
 input_errors=0
-while getopts ":H:t:s:r:R:e:n:N:dC:h" flag; do
+while getopts ":H:t:r:R:e:n:N:dC:h" flag; do
     case $flag in
         H)
             if is_safe_email "$OPTARG"; then
@@ -121,15 +116,6 @@ while getopts ":H:t:s:r:R:e:n:N:dC:h" flag; do
                 TTL=$OPTARG
             else
                 >&2 echo "Zone default TTL must be an integer from $TTL_MIN to $TTL_MAX."
-                ((input_errors++))
-            fi
-        ;;
-        s)
-            if test "$OPTARG" -ge $SERIAL_NUM_MIN >/dev/null 2>&1 && \
-                    test "$OPTARG" -le $SERIAL_NUM_MAX >/dev/null 2>&1; then
-                SERIAL_NUM=$OPTARG
-            else
-                >&2 echo "Zone serial number must be an integer from $SERIAL_NUM_MIN to $SERIAL_NUM_MAX."
                 ((input_errors++))
             fi
         ;;
@@ -263,7 +249,6 @@ else
     "name": "$ZONE_NAME",
     "type": "Zone",
     "kind": "Native",
-    "serial": $SERIAL_NUM,
     "masters": [],
     "nameservers": [],
     "rrsets": [
@@ -274,7 +259,7 @@ else
             "records": [
                 {
                     "disabled": false,
-                    "content": "$PRIMARY_MASTER $HOSTMASTER_EMAIL $SERIAL_NUM $REFRESH $RETRY $EXPIRY $NEGATIVE_TTL"
+                    "content": "$PRIMARY_MASTER $HOSTMASTER_EMAIL 0 $REFRESH $RETRY $EXPIRY $NEGATIVE_TTL"
                 }
             ]
         },

@@ -11,7 +11,6 @@ testCreateAndDeleteZone(){
     local MASTER_3=tertiary.master.$ZONE_NAME
     local HOSTMASTER_EMAIL=$(_random_alphanumeric_chars 8)@$ZONE_NAME
     local TTL=85399
-    local ZONE_SERIAL=42
     local REFRESH=1199
     local RETRY=179
     local EXPIRY=1209599
@@ -19,7 +18,7 @@ testCreateAndDeleteZone(){
     local NS_TTL=1209601
 
     # create a zone and exercise all script params
-    create-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -s $ZONE_SERIAL -r $REFRESH \
+    create-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -r $REFRESH \
         -R $RETRY -e $EXPIRY -n $NEG_TTL -N $NS_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
     echo "Zone name: $ZONE_NAME"
