@@ -16,16 +16,18 @@ testCreateAndDeleteZone(){
     local RETRY=179
     local EXPIRY=1209599
     local NEG_TTL=61
+    local NS_TTL=1209601
 
     # create a zone and exercise all script params
-    set -x
     create-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -s $ZONE_SERIAL -r $REFRESH \
-        -R $RETRY -e $EXPIRY -n $NEG_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
-    set +x
+        -R $RETRY -e $EXPIRY -n $NEG_TTL -N $NS_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
     echo "Zone name: $ZONE_NAME"
 
     # FIXME: dig it and assert we got what we expected
+    # dig ... AXFR prints SOA records on the first and last line by design
+    # FIXME: why do NS records default to a 3600 second TTL?  Is this actually a good default?
+    #   Does the user need a handle on NS record TTL?
     local DIG_OUT="$($DIG $ZONE_NAME AXFR)"
     if [ "$DIG_OUT" == "; Transfer failed." ]; then
         >&2 echo "pdns_server STDOUT:"

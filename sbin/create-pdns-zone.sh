@@ -2,6 +2,7 @@
 
 #FIXME: add license header
 
+#FIXME: add NS record TTL flag
 USAGE="\
 create-pdns-zone.sh [options] zone.name.tld. primary.master.nameserver.tld.
         [supplementary.master.nameserver1.tld. ...]
@@ -31,6 +32,8 @@ Options:
     -n <1-10800>            Time, in seconds that a resolver may cache a
                             negative lookup, (NXDOMAIN), result.
                             Default: 60, (1 minute).
+    -N <1-2147483647>       NS record TTL, in seconds.
+                            Default: 1209600, (2 weeks)
     -d                      Enable additional debugging output.
     -C </path/to/pdns.conf> Path to alternate PowerDNS configuration file.
                             Default: @ETCDIR@/pdns/pdns.conf
@@ -90,6 +93,9 @@ EXPIRY_MAX=2147483647
 NEGATIVE_TTL=60
 NEGATIVE_TTL_MIN=0
 NEGATIVE_TTL_MAX=10800
+NS_RECORD_TTL=1209600
+NS_RECORD_TTL_MIN=1
+NS_RECORD_TTL_MAX=2147483647
 
 HELP=false
 DEBUG=false
@@ -98,7 +104,7 @@ HOSTMASTER_EMAIL=
 
 # Validate and process input
 input_errors=0
-while getopts ":H:t:s:r:R:e:n:dC:h" flag; do
+while getopts ":H:t:s:r:R:e:n:N:dC:h" flag; do
     case $flag in
         H)
             if is_safe_email "$OPTARG"; then
@@ -157,6 +163,15 @@ while getopts ":H:t:s:r:R:e:n:dC:h" flag; do
                 NEGATIVE_TTL=$OPTARG
             else
                 >&2 echo "Zone negative answer TTL must be an integer from $NEGATIVE_TTL_MIN to $NEGATIVE_TTL_MAX."
+                ((input_errors++))
+            fi
+        ;;
+        N)
+            if test "$OPTARG" -ge $NS_RECORD_TTL_MIN >/dev/null 2>&1 && \
+                    test "$OPTARG" -le $NS_RECORD_TTL_MAX >/dev/null 2>&1; then
+                NS_RECORD_TTL=$OPTARG
+            else
+                >&2 echo "NS record TTL must be an integer from $NS_RECORD_TTL_MIN to $NS_RECORD_TTL_MAX."
                 ((input_errors++))
             fi
         ;;
@@ -240,21 +255,16 @@ if zone_exists "$ZONE_NAME"; then
     >&2 echo "Zone '$ZONE_NAME' already exists."
     exit 1
 else
-    NAME_SERVERS="\"$PRIMARY_MASTER\""
+    # FIXME: convert .nameservers to an RR set.
 
-    for name_server in ${supplementary_dns[@]}; do
-        NAME_SERVERS="$NAME_SERVERS, \"$name_server\""
-    done
-
-    # REST CALL to create zone
     CURL_INFILE="$(mktemp)"
-    cat > "$CURL_INFILE" <<REQUEST_BODY
+    cat > "$CURL_INFILE" <<REQUEST_BODY_HEAD
 {
     "name": "$ZONE_NAME",
     "type": "Zone",
     "kind": "Native",
     "masters": [],
-    "nameservers": [$NAME_SERVERS],
+    "nameservers": [],
     "rrsets": [
         {
             "name": "$ZONE_NAME",
@@ -266,16 +276,40 @@ else
                     "content": "$PRIMARY_MASTER $HOSTMASTER_EMAIL $SERIAL_NUM $REFRESH $RETRY $EXPIRY $NEGATIVE_TTL"
                 }
             ]
+        },
+        {
+            "name": "$ZONE_NAME",
+            "type": "NS",
+            "ttl": $NS_RECORD_TTL,
+            "records": [
+                {
+                    "disabled": false,
+                    "content": "$PRIMARY_MASTER"
+                }
+REQUEST_BODY_HEAD
+
+    for name_server in ${supplementary_dns[@]}; do
+        cat >> "$CURL_INFILE" <<SUPPLEMENTARY_NS_RECORD
+                ,{
+                    "disabled": false,
+                    "content": "$name_server"
+                }
+SUPPLEMENTARY_NS_RECORD
+    done
+
+cat >> "$CURL_INFILE" <<REQUEST_BODY_TAIL
+            ]
         }
     ]
 }
-REQUEST_BODY
+REQUEST_BODY_TAIL
 
     if $DEBUG; then
         >&2 echo "Request body:"
         >&2 cat "$CURL_INFILE"
     fi
 
+    # REST CALL to create zone
     CURL_OUTFILE="$(mktemp)"
     curl $CURL_VERBOSE\
         --request POST\
@@ -286,6 +320,6 @@ REQUEST_BODY
 
     if $DEBUG; then
         >&2 echo "Response body:"
-        >&2 jq "$CURL_OUTFILE"
+        >&2 cat "$CURL_OUTFILE"
     fi
 fi
