@@ -81,8 +81,7 @@ testCreateAndDeleteZone(){
     # delete zone
     delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
-    # FIXME: assert that it's gone
-    $DIG +onesoa $ZONE_NAME AXFR
+    assertEquals "Failed to delete test zone. " "; Transfer failed." "$($DIG +onesoa $ZONE_NAME AXFR)"
 }
 
 testCreateAndDeleteZoneWithDefaults(){
