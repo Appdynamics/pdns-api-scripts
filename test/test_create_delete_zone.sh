@@ -46,11 +46,12 @@ testCreateAndDeleteZone(){
         eval $(echo "$DIG_OUT" | awk '
             /\tSOA\t/{
                 print "DIG_ZONE_NAME="$1;
-                print "DIG_ZONE_TTL="$2;
+                print "DIG_TTL="$2;
                 print "DIG_PRIMARY_MASTER="$5;
-                printf("DIG_HOSTMASTER_EMAIL=%s\n", sub("\.", "@", $6));
+                sub(/\./, "@", $6);
+                print "DIG_HOSTMASTER_EMAIL="$6
                 print "DIG_REFRESH="$8;
-                print "$DIG_RETRU="$9;
+                print "DIG_RETRY="$9;
                 print "DIG_EXPIRY="$10;
                 print "DIG_NEG_TTL="$11;
             }
@@ -60,7 +61,7 @@ testCreateAndDeleteZone(){
             /\tNS\t'"$MASTER_2"'$/{
                 print "DIG_MASTER_2_TTL="$2
             }
-            /\tNS'"$MASTER_3"'$/{
+            /\tNS\t'"$MASTER_3"'$/{
                 print "DIG_MASTER_3_TTL="$2
             }
         ')
