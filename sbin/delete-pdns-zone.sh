@@ -24,7 +24,7 @@ declare PDNS_API_IP \
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
-CURL_VERBOSE=false
+CURL_VERBOSE=
 DEBUG=false
 
 input_errors=0

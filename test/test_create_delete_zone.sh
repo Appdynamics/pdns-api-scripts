@@ -79,7 +79,7 @@ testCreateAndDeleteZone(){
     fi
 
     # delete zone
-    delete-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
+    delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
     # FIXME: assert that it's gone
     $DIG +onesoa $ZONE_NAME AXFR
