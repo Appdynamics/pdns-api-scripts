@@ -263,6 +263,7 @@ else
     "name": "$ZONE_NAME",
     "type": "Zone",
     "kind": "Native",
+    "serial": $SERIAL_NUM,
     "masters": [],
     "nameservers": [],
     "rrsets": [
