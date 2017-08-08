@@ -65,6 +65,7 @@ testCreateAndDeleteZone(){
                 print "DIG_MASTER_3_TTL="$2
             }
         ')
+
         assertEquals 'Zone name' "$ZONE_NAME" "$DIG_ZONE_NAME"
         assertEquals 'Hostmaster email' "$HOSTMASTER_EMAIL" "$DIG_HOSTMASTER_EMAIL"
         assertEquals 'Zone TTL' "$TTL" "$DIG_TTL"

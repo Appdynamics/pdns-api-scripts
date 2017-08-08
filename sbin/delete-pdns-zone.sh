@@ -29,7 +29,7 @@ DEBUG=false
 
 input_errors=0
 while getopts ":dC:h" flag; do
-    case flag in
+    case $flag in
         d)
             CURL_VERBOSE=-v
             DEBUG=true

@@ -45,7 +45,7 @@ TTL_MAX=2147483647
 
 input_errors=0
 while getopts ":pdh" flag; do
-    case flag in
+    case $flag in
         t)
             if test "$OPTARG" -ge $TTL_MIN >/dev/null 2>&1 && test "$OPTARG" -le $TTL_MAX >/dev/null 2>&1; then
                 # FIXME: PATCH /api/v1/servers/:server_id/zones/:zone_id with changetype=REPLACE may not accept

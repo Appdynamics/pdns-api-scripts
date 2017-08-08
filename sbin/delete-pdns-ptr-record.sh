@@ -46,7 +46,7 @@ reverse_zone_is_empty(){
 
 input_errors=0
 while getopts ":Ddh" flag; do
-    case flag in
+    case $flag in
         D)
             DELETE_EMPTY_ZONE=true
         ;;
