@@ -14,6 +14,8 @@ Options:
     -h                      Print this help message, and exit.
 "
 
+PDNS_CONF=@ETCDIR@/pdns/pdns.conf
+
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
 declare PDNS_API_IP \
@@ -26,11 +28,14 @@ CURL_VERBOSE=false
 DEBUG=false
 
 input_errors=0
-while getopts ":dh" flag; do
+while getopts ":dC:h" flag; do
     case flag in
         d)
             CURL_VERBOSE=-v
             DEBUG=true
+        ;;
+        C)
+            PDNS_CONF="$OPTARG"
         ;;
         h)
             echo "$USAGE"
@@ -42,6 +47,8 @@ while getopts ":dh" flag; do
         ;;
     esac
 done
+
+read_pdns_config "$PDNS_CONF"
 
 shift $((OPTIND-1))
 

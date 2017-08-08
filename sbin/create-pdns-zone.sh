@@ -292,7 +292,7 @@ REQUEST_BODY_TAIL
 
     if $DEBUG; then
         >&2 echo "Request body:"
-        >&2 cat "$CURL_INFILE"
+        >&2 jq < "$CURL_INFILE"
     fi
 
     # REST CALL to create zone
@@ -306,6 +306,6 @@ REQUEST_BODY_TAIL
 
     if $DEBUG; then
         >&2 echo "Response body:"
-        >&2 cat "$CURL_OUTFILE"
+        >&2 jq < "$CURL_OUTFILE"
     fi
 fi

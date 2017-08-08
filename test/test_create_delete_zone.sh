@@ -21,26 +21,66 @@ testCreateAndDeleteZone(){
     create-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -r $REFRESH \
         -R $RETRY -e $EXPIRY -n $NEG_TTL -N $NS_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
-    echo "Zone name: $ZONE_NAME"
-
     # FIXME: dig it and assert we got what we expected
     # dig ... AXFR prints SOA records on the first and last line by design
-    # FIXME: why do NS records default to a 3600 second TTL?  Is this actually a good default?
-    #   Does the user need a handle on NS record TTL?
-    local DIG_OUT="$($DIG $ZONE_NAME AXFR)"
+    local DIG_OUT="$($DIG +onesoa $ZONE_NAME AXFR)"
     if [ "$DIG_OUT" == "; Transfer failed." ]; then
+        >&2 echo "testCreateAndDeleteZone '$DIG +onesoa $ZONE_NAME AXFR' failed."
         >&2 echo "pdns_server STDOUT:"
         >&2 cat "$PDNS_STDOUT"
         >&2 echo "pdns_server STDERR:"
         >&2 cat "$PDNS_STDERR"
+        fail
     else
-        >&2 echo "$DIG_OUT"
+        local DIG_ZONE_NAME
+        local DIG_HOSTMASTER_EMAIL
+        local DIG_TTL
+        local DIG_REFRESH
+        local DIG_RETRY
+        local DIG_EXPIRY
+        local DIG_NEG_TTL
+        local DIG_PRIMARY_MASTER_TTL
+        local DIG_MASTER_2_TTL
+        local DIG_MASTER_3_TTL
+
+        eval $(echo "$DIG_OUT" | awk '
+            /\tSOA\t/{
+                print "DIG_ZONE_NAME="$1;
+                print "DIG_ZONE_TTL="$2;
+                print "DIG_PRIMARY_MASTER="$5;
+                printf("DIG_HOSTMASTER_EMAIL=%s\n", sub("\.", "@", $6));
+                print "DIG_REFRESH="$8;
+                print "$DIG_RETRU="$9;
+                print "DIG_EXPIRY="$10;
+                print "DIG_NEG_TTL="$11;
+            }
+            /\tNS\t'"$PRIMARY_MASTER"'$/{
+                print "DIG_PRIMARY_MASTER_TTL="$2;
+            }
+            /\tNS\t'"$MASTER_2"'$/{
+                print "DIG_MASTER_2_TTL="$2
+            }
+            /\tNS'"$MASTER_3"'$/{
+                print "DIG_MASTER_3_TTL="$2
+            }
+        ')
+        assertEquals 'Zone name' "$ZONE_NAME" "$DIG_ZONE_NAME"
+        assertEquals 'Hostmaster email' "$HOSTMASTER_EMAIL" "$DIG_HOSTMASTER_EMAIL"
+        assertEquals 'Zone TTL' "$TTL" "$DIG_TTL"
+        assertEquals 'Zone referesh interval' "$REFRESH" "$DIG_REFRESH"
+        assertEquals 'Zone retry interval' "$RETRY" "$DIG_RETRY"
+        assertEquals 'Zone expiry time' "$EXPIRY" "$DIG_EXPIRY"
+        assertEquals 'Zone NXDOMAIN TTL' "$NEG_TTL" "$DIG_NEG_TTL"
+        assertEquals 'Primary NS record TTL' "$NS_TTL" "$DIG_PRIMARY_MASTER_TTL"
+        assertEquals 'Secondary NS record TTL' "$NS_TTL" "$DIG_MASTER_2_TTL"
+        assertEquals 'Tertiary NS record TTL' "$NS_TTL" "$DIG_MASTER_3_TTL"
     fi
 
     # delete zone
     delete-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
     # FIXME: assert that it's gone
+    $DIG +onesoa $ZONE_NAME AXFR
 }
 
 testCreateAndDeleteZoneWithDefaults(){
