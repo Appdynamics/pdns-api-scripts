@@ -1,7 +1,8 @@
+#FIXME: add license header
+
 declare PDNS_TEST_DATA_ROOT PDNS_PID PDNS_STDERR PDNS_STDOUT
 PDNS_TEST_DNS_PORT=5354
 PDNS_TEST_HTTP_PORT=8011
-
 
 # Alias dig with recurring options
 DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PORT"
@@ -30,6 +31,11 @@ _random_alphanumeric_chars(){
     fi
 }
 
+# Echoes random number between 0 and 254
+_random_ipv4_octet(){
+    echo echo $((RANDOM % 255 ))
+}
+
 oneTimeSetUp(){
     PDNS_TEST_DATA_ROOT="$(mktemp -d)"
     PDNS_CONF_DIR="$PDNS_TEST_DATA_ROOT/conf"
@@ -50,7 +56,6 @@ oneTimeSetUp(){
     # save PID
     PDNS_PID=$!
     set +x
-
 
     if ! ps -p $PDNS_PID; then
         >&2 echo "pdns_server failed to start."

@@ -44,22 +44,14 @@ PDNS_CONF=@ETCDIR@/pdns/pdns.conf
 # just to keep the IDE happy
 declare PDNS_API_IP \
     PDNS_API_PORT \
-    PDNS_API_KEY
+    PDNS_API_KEY \
+    CURL_INFILE \
+    CURL_OUTFILE \
+    DEBUG
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
-declare CURL_INFILE CURL_OUTFILE
-
-_cleanup(){
-    if [ -f "$CURL_INFILE" ]; then
-        rm -f "$CURL_INFILE"
-    fi
-    if [ -f "$CURL_OUTFILE" ] ; then
-        rm -f "$CURL_OUTFILE"
-    fi
-}
-
-trap _cleanup EXIT
+declare
 
 # TODO: RFC822, sections 3.3 and 6 actually allow for many more special
 # characters in the "local-part" token, but supporting all of them takes us to
@@ -301,11 +293,9 @@ REQUEST_BODY_TAIL
         --request POST\
         --header "Content-Type: application/json"\
         --header "X-API-Key: $PDNS_API_KEY"\
+        -w \\n%{http_code}\\n \
         --data @-\
         http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones < "$CURL_INFILE" > "$CURL_OUTFILE"
 
-    if $DEBUG; then
-        >&2 echo "Response body:"
-        >&2 jq < "$CURL_OUTFILE"
-    fi
+    process_curl_output "Create zone operation failed:"
 fi

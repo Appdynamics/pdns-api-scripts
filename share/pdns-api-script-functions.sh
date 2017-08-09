@@ -3,10 +3,27 @@
 # 'declare' variables we set with 'eval' below just to keep the IDE happy
 declare PDNS_API_IP \
     PDNS_API_PORT \
-    PDNS_API_KEY
+    PDNS_API_KEY \
+
+declare DEBUG
 
 # Alias dig for sparse output
 DIG="dig +noquestion +nocomments +nocmd +nostats"
+
+_cleanup(){
+    if [ -f "$CURL_INFILE" ]; then
+        rm -f "$CURL_INFILE"
+    fi
+
+    if [ -f "$CURL_OUTFILE" ]; then
+        rm -f "$CURL_OUTFILE"
+    fi
+}
+
+trap _cleanup EXIT
+CURL_INFILE="$(mktemp)"
+CURL_OUTFILE="$(mktemp)"
+
 
 # Sets $PDNS_API_IP, $PDNS_API_PORT, $PDNS_API_KEY based on the contents a PowerDNS config file
 # $1: path to the active PowerDNS config file
@@ -107,7 +124,7 @@ get_ptr_host_part(){
 }
 
 # Prints the hostname part of a fully-qualified domain name to STDOUT.
-# $1: fully-qualified
+# $1: fully-qualified hostname
 get_host_part(){
     echo "$1" | cut -d . -f 1
 }
@@ -117,11 +134,34 @@ get_zone_part(){
 }
 
 zone_exists(){
-    is_valid_dns_name $@ && \
         [[ $(curl -s -w \\n%{http_code}\\n --header "X-API-KEY: $PDNS_API_KEY" \
             http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1 | tail -1) -eq 200 ]]
 }
 
 trailing_dot_msg(){
     >&2 echo "Please note that the trailing dot, ('.'), is required."
+}
+
+# If $DEBUG was set, or curl received a non-2xx status code
+# Prints the status of the request and the response body on STDERR
+# and calls 'exit 1' if curl received a non-2xx status code.
+# Calls exit 0, otherwise.
+# $1: "Message to print if request failed."
+process_curl_output(){
+    if [[ $(tail -1 "$CURL_OUTFILE") =~ ^2 ]]; then
+        ERROR=false
+    else
+        ERROR=true
+    fi
+
+    if $ERROR || $DEBUG; then
+        if $ERROR; then
+            >&2 echo "$1"
+        else
+            >&2 echo "Response body:"
+        fi
+        head -1 "$CURL_OUTFILE" | >&2 jq
+        $ERROR || exit 1
+        exit 0
+    fi
 }

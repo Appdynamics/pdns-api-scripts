@@ -26,7 +26,11 @@ Options:
 # just to keep the IDE happy
 declare PDNS_API_IP \
     PDNS_API_PORT \
-    PDNS_API_KEY
+    PDNS_API_KEY \
+    CURL_INFILE \
+    CURL_OUTFILE
+
+
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
@@ -127,13 +131,7 @@ if $MANAGE_PTR; then
     create_update-pdns-ptr-record.sh -c $DEBUG_FLAG $TTL_FLAG $A_RECORD_IP $A_RECORD_NAME
 fi
 
-# create/update A record
-curl $CURL_VERBOSE\
-        --request PATCH\
-        --header "Content-Type: application/json"\
-        --header "X-API-Key: $PDNS_API_KEY"\
-        --data @-\
-        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$A_RECORD_ZONE <<PATCH_REQUEST_BODY |
+cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
 {
     "rrsets":
         [
@@ -153,4 +151,21 @@ curl $CURL_VERBOSE\
     "comments": []
 }
 PATCH_REQUEST_BODY
-jq
+
+if $DEBUG; then
+    >&2 echo "Patch request body:"
+    >&2 jq < "$CURL_INFILE"
+fi
+
+# create/update A record
+curl $CURL_VERBOSE\
+        --request PATCH\
+        --header "Content-Type: application/json"\
+        --header "X-API-Key: $PDNS_API_KEY"\
+        -w \\n%{http_code}\\n \
+        --data @-\
+        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$A_RECORD_ZONE \
+        < "$CURL_INFILE" \
+        > "$CURL_OUTFILE"
+
+process_curl_output "Create / update A record operation failed:"

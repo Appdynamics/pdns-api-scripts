@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#FIXME: add license header
+
 if [ ${#BASH_SOURCE[@]} -eq 1 ]; then
     source "$(dirname ${BASH_SOURCE[0]})/setup_and_teardown.sh"
 fi
@@ -81,6 +83,7 @@ testCreateAndDeleteZone(){
     # delete zone
     delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
+    # assert that zone was deleted
     assertEquals "Failed to delete test zone. " "; Transfer failed." "$($DIG +onesoa $ZONE_NAME AXFR)"
 }
 
@@ -160,6 +163,7 @@ testCreateAndDeleteZoneWithDefaults(){
     # delete zone
     delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
+    #assert that zone was deleted
     assertEquals "Failed to delete test zone. " "; Transfer failed." "$($DIG +onesoa $ZONE_NAME AXFR)"
 }
 
