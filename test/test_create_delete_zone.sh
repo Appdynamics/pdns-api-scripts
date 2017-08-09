@@ -89,7 +89,7 @@ testCreateAndDeleteZoneWithDefaults(){
     local PRIMARY_MASTER=primary.master.$ZONE_NAME
     local MASTER_2=secondary.master.$ZONE_NAME
     local MASTER_3=tertiary.master.$ZONE_NAME
-    local HOSTMASTER_EMAIL=$(_random_alphanumeric_chars 8)@$ZONE_NAME
+    local HOSTMASTER_EMAIL=$(whoami)@$(hostname -s).corp.appdynamics.com.
     local TTL=86400
     local REFRESH=1200
     local RETRY=180
@@ -104,7 +104,7 @@ testCreateAndDeleteZoneWithDefaults(){
     # dig ... AXFR prints SOA records on the first and last line by design
     local DIG_OUT="$($DIG +onesoa $ZONE_NAME AXFR)"
     if [ "$DIG_OUT" == "; Transfer failed." ]; then
-        >&2 echo "testCreateAndDeleteZone '$DIG +onesoa $ZONE_NAME AXFR' failed."
+        >&2 echo "testCreateAndDeleteZoneWithDefaults '$DIG +onesoa $ZONE_NAME AXFR' failed."
         >&2 echo "pdns_server STDOUT:"
         >&2 cat "$PDNS_STDOUT"
         >&2 echo "pdns_server STDERR:"

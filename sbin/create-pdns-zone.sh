@@ -183,7 +183,7 @@ read_pdns_config "$PDNS_CONF"
 if [ -z "$HOSTMASTER_EMAIL" ]; then
     HOSTMASTER_EMAIL=$(curl -s --header "X-API-KEY: $PDNS_API_KEY"\
             http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/config | \
-            jq -r '.[] | select(.name=="default-soa-mail").value')
+            jq -r '.[] | select(.name=="default-soa-mail").value').
     if [ -z "$HOSTMASTER_EMAIL" ]; then
         >&2 echo "Hostmaster email not specified and 'default-soa-mail' not configured in pdns."
         ((input_errors++))
