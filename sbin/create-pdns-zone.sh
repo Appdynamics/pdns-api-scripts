@@ -51,8 +51,6 @@ declare PDNS_API_IP \
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
-declare
-
 # TODO: RFC822, sections 3.3 and 6 actually allow for many more special
 # characters in the "local-part" token, but supporting all of them takes us to
 # the land of diminishing returns.  If we need to support any RFC822-compliant
