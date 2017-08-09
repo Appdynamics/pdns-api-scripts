@@ -2,6 +2,7 @@
 
 # FIXME: add license header
 
+# TODO: add support for multiple addresses per A record (incompatible with -p flag)
 USAGE="\
 create_update-pdns-a-record.sh [options] hostname.zonename.tld. <IP Address>
 
@@ -30,7 +31,7 @@ declare PDNS_API_IP \
     CURL_INFILE \
     CURL_OUTFILE
 
-
+PDNS_CONF=@ETCDIR@/pdns/pdns.conf
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
@@ -48,7 +49,7 @@ TTL_MIN=0
 TTL_MAX=2147483647
 
 input_errors=0
-while getopts ":pdh" flag; do
+while getopts ":t:pdC:h" flag; do
     case $flag in
         t)
             if test "$OPTARG" -ge $TTL_MIN >/dev/null 2>&1 && test "$OPTARG" -le $TTL_MAX >/dev/null 2>&1; then
@@ -58,8 +59,8 @@ while getopts ":pdh" flag; do
                 TTL_LINE="\"ttl\": $TTL,"
             else
                 >&2 echo "Record TTL must be an integer from $TTL_MIN to $TTL_MAX."
+                ((input_errors++))
             fi
-            ((input_errors++))
         ;;
         p)
             MANAGE_PTR=true
@@ -68,6 +69,9 @@ while getopts ":pdh" flag; do
             CURL_VERBOSE=-v
             DEBUG=true
             DEBUG_FLAG=-d
+        ;;
+        C)
+            PDNS_CONF="$OPTARG"
         ;;
         h)
             HELP=true
@@ -78,6 +82,8 @@ while getopts ":pdh" flag; do
         ;;
     esac
 done
+
+read_pdns_config "$PDNS_CONF"
 
 if $HELP; then
     echo "$USAGE"
@@ -115,13 +121,11 @@ fi
 
 # if zone doesn't exist, bail.
 A_RECORD_ZONE=`get_zone_part $A_RECORD_NAME`
-if ! zone_exists ; then
+if ! zone_exists $A_RECORD_ZONE; then
     >&2 echo "Error: Zone '$A_RECORD_ZONE' does not exist."
     >&2 echo "Exiting."
     exit 1
 fi
-
-A_RECORD_HOST_PART=`get_host_part $A_RECORD_NAME`
 
 if $MANAGE_PTR; then
     # create/update PTR record
@@ -136,15 +140,17 @@ cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
     "rrsets":
         [
             {
-                "name": "$A_RECORD_HOST_PART",
+                "name": "$A_RECORD_NAME",
                 $TTL_LINE
                 "type": "A",
                 "changetype": "REPLACE",
-                "reccords":
+                "records":
                     [
-                        "content": "$A_RECORD_IP",
-                        "disabled": false,
-                        "set-ptr": false,
+                        {
+                            "content": "$A_RECORD_IP",
+                            "disabled": false,
+                            "set-ptr": false
+                        }
                     ]
             }
         ],

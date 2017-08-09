@@ -33,7 +33,7 @@ _random_alphanumeric_chars(){
 
 # Echoes random number between 0 and 254
 _random_ipv4_octet(){
-    echo echo $((RANDOM % 255 ))
+    echo $((RANDOM % 255 ))
 }
 
 oneTimeSetUp(){

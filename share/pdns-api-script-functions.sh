@@ -92,10 +92,10 @@ is_valid_ipv4_address(){
         return 1
     fi
     local octets
-    eval `echo $1 | awk -F . '{print "octets[0]="$1"\noctects[1]="$2"\noctets[2]="$3"\noctets[3]="$4}'`
+    eval `echo $1 | awk -F . '{print "octets[0]="$1"\noctets[1]="$2"\noctets[2]="$3"\noctets[3]="$4}'`
     i=0
     while [ $i -lt 4 ]; do
-        if [ ${octets[$i]} -lt 0 ] || [ ${octets[$i]} -gt 255 ]; then
+        if ! ([ "${octets[$i]}" -ge 0 ] && [ "${octets[$i]}" -le 255 ]); then
             return 1
         fi
         ((i++))
