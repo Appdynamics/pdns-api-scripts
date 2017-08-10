@@ -72,14 +72,14 @@ read_pdns_config(){
 # $1: IP address or hostname of DNS server to query
 # $2: fully-qualified hostname to resolve
 get_host_by_name(){
-    $DIG +short @"$1" "$2" | tail -1
+    $DIG +short @"$1" "$2" 2>/dev/null | tail -1
 }
 
 # Print a hostname to STDOUT given a DNS server address and an IP address to lookup in reverse
 # $1: IP address or hostname of the DNS server to query
 # $2: IP address to lookup in reverse
 get_host_by_addr(){
-    $DIG +short @"$1" -x "$2"
+    $DIG +short @"$1" -x "$2" 2>/dev/null
 }
 
 # return 0 (true) if given exactly one argument, and $1 is a valid hostname

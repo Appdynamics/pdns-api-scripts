@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #FIXME: add license header
 
 declare PDNS_TEST_DATA_ROOT PDNS_PID PDNS_STDERR PDNS_STDOUT

@@ -1,4 +1,4 @@
-#!/bin/bash
+#@IgnoreInspection BashAddShebang
 
 #FIXME: add license header
 
@@ -30,6 +30,7 @@ testCreateUpdateARecord(){
         "$($DIG $RECORD_NAME.$ZONE_NAME A)"
 
     # assert that the A record's complementary PTR record was created
+    # FIXME: ptr scripts seem woefully broken, test and fix them before continuing here...
     dig @localhost -p $PDNS_TEST_DNS_PORT -x $RECORD_IP
 
     # update the A record with different parameters

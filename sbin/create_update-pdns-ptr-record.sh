@@ -23,12 +23,12 @@ Options:
 declare PDNS_API_IP \
     PDNS_API_PORT \
     PDNS_API_KEY \
-    DIG
+    DIG \
+    CURL_INFILE \
+    CURL_OUTFILE
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
-CURL_OUTFILE=
-CURL_ERRFILE=
 cleanup(){
     if [ -n "$CURL_OUTFILE" ]; then
         rm -f "$CURL_OUTFILE"
@@ -49,11 +49,14 @@ TTL_MAX=2147483647
 
 DEBUG=false
 DEBUG_FLAG=
+CURL_VERBOSE=
 CREATE_NONEXISTENT_ZONE=false
 HELP=false
 
+PDNS_CONF=@ETCDIR@/pdns/pdns.conf
+
 input_errors=0
-while getopts ":t:cdh" flag; do
+while getopts ":t:cdC:h" flag; do
     case $flag in
         t)
             if test "$OPTARG" -ge $TTL_MIN >/dev/null 2>&1 && test "$OPTARG" -le $TTL_MAX >/dev/null 2>&1; then
@@ -63,8 +66,8 @@ while getopts ":t:cdh" flag; do
                 TTL_LINE="\"ttl\": $TTL,"
             else
                 >&2 echo "Record TTL must be an integer from $TTL_MIN to $TTL_MAX."
+                ((input_errors++))
             fi
-            ((input_errors++))
         ;;
         c)
             CREATE_NONEXISTENT_ZONE=true
@@ -72,6 +75,10 @@ while getopts ":t:cdh" flag; do
         d)
             DEBUG=true
             DEBUG_FLAG=-d
+            CURL_VERBOSE=-v
+        ;;
+        C)
+            PDNS_CONF="$OPTARG"
         ;;
         h)
             HELP=true
@@ -82,6 +89,8 @@ while getopts ":t:cdh" flag; do
         ;;
     esac
 done
+
+read_pdns_config "$PDNS_CONF"
 
 shift $((OPTIND - 1))
 
@@ -118,7 +127,7 @@ NEW_PTR_ZONE=`get_ptr_zone_part $NEW_PTR_IP`
 
 if ! zone_exists $NEW_PTR_ZONE; then
     if $CREATE_NONEXISTENT_ZONE; then
-        create-pdns-zone.sh $NEW_PTR_ZONE localhost.
+        bash -x create-pdns-zone.sh -C "$PDNS_CONF" $DEBUG_FLAG $NEW_PTR_ZONE localhost.
     else
         >&2 echo "Inverse zone $NEW_PTR_ZONE does not exist."
         >&2 echo "Exiting without changes."
@@ -131,21 +140,12 @@ if [ "$OLD_PTR_HOSTNAME" == "$NEW_PTR_HOSTNAME" ]; then
     if [ "$OLD_PTR_ZONE" != "$NEW_PTR_ZONE" ]; then
         DELETE_EMPTY_ZONE_FLAG=-D
     fi
-    delete-pdns-ptr-record.sh $DELETE_EMPTY_ZONE_FLAG $DEBUG_FLAG $OLD_PTR_IP
+    delete-pdns-ptr-record.sh -C "$PDNS_CONF" $DELETE_EMPTY_ZONE_FLAG $DEBUG_FLAG $OLD_PTR_IP
 fi
 
-# create new ptr record
-CURL_OUTFILE=$(mktemp)
-CURL_ERRFILE=$(mktemp)
 NEW_PTR_HOST_PART=`get_ptr_host_part $NEW_PTR_IP`
-curl -v\
-    --request PATCH\
-    --header "Content-Type: application/json"\
-    --header "X-API-Key: $PDNS_API_KEY"\
-    --data @-\
-    -w \\n%{http_code}\\n\
-    http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$NEW_PTR_ZONE <<PATCH_REQUEST_BODY \
-            > "$CURL_OUTFILE" 2> "$CURL_ERRFILE"
+
+cat > $CURL_INFILE <<PATCH_REQUEST_BODY
 {
     "rrsets":
         [
@@ -153,7 +153,7 @@ curl -v\
                 "name": "$NEW_PTR_HOST_PART",
                 "type": "PTR",
                 $TTL_LINE
-                "changetype": "REPLACE"
+                "changetype": "REPLACE",
                 "records":
                     [
                         {
@@ -168,15 +168,17 @@ curl -v\
 }
 PATCH_REQUEST_BODY
 
-if [ $? -eq 0 ]; then
-    if [[ $(tail -1 "$CURL_OUTFILE") -ne 200 ]]; then
-        head -1 "$CURL_OUTFILE" | >&2 jq
-        exit 2
-    fi
-else
-    >&2 echo "curl REST API call failed.
-curl STDERR output:
-
-$(cat "$CURL_ERRFILE")"
-    exit 3
+if $DEBUG; then
+    >&2 echo "Request body:"
+    >&2 jq < $CURL_INFILE
 fi
+
+curl $CURL_VERBOSE\
+    --request PATCH\
+    --header "Content-Type: application/json"\
+    --header "X-API-Key: $PDNS_API_KEY"\
+    --data @-\
+    -w \\n%{http_code}\\n\
+    http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$NEW_PTR_ZONE > "$CURL_OUTFILE"
+
+process_curl_output "Create / update PTR record failed:"

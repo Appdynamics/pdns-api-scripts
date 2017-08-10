@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#@IgnoreInspection BashAddShebang
 #FIXME: add license header
 
 testCreateAndDeleteZone(){
