@@ -10,9 +10,10 @@ PDNS_TEST_HTTP_PORT=8011
 DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PORT"
 
 _cleanup(){
-    >&2 echo "Dropping to a shell for debugging purposes.  Exit to complete cleanup."
-    pushd $PDNS_TEST_DATA_ROOT
-    /bin/bash
+    #>&2 echo "Dropping to a shell for debugging purposes.  Exit to complete cleanup."
+    #pushd $PDNS_TEST_DATA_ROOT
+    #/bin/bash
+    #popd
     if [ -n "$PDNS_PID" ]; then
         if kill -TERM $PDNS_PID >/dev/null 2>&1; then
             >&2 echo "Terminated pdns_server pid $PDNS_PID"
