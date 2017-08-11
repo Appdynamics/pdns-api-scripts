@@ -52,7 +52,7 @@ oneTimeSetUp(){
 
     # generate temporary pdns config / sqlite database
     @PDNS_SQLITE_LIBEXEC@/init-pdns-sqlite3-db-and-config.sh -n -C "$PDNS_CONF_DIR" -D "$PDNS_SQLITE_DIR"\
-        -p $PDNS_TEST_DNS_PORT -H $PDNS_TEST_HTTP_PORT
+        -p $PDNS_TEST_DNS_PORT -H $PDNS_TEST_HTTP_PORT -s "$PDNS_TEST_DATA_ROOT"
 
     # start pdns_server, redirect stdout, stderr to files in $PDNS_TEST_DATA_ROOT and background
     >&2 echo "Starting test pdns_server from $PDNS_TEST_DATA_ROOT"
