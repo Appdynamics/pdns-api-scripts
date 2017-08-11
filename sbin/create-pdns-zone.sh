@@ -47,7 +47,8 @@ declare PDNS_API_IP \
     PDNS_API_KEY \
     CURL_INFILE \
     CURL_OUTFILE \
-    DEBUG
+    DEBUG \
+    TTL
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
@@ -63,9 +64,9 @@ is_safe_email(){
 }
 
 # Defaults, minimums, and maximums
-TTL=86400
-TTL_MIN=0
-TTL_MAX=2147483647
+# TTL=86400 (declared in @SHAREDIR@/pdns-api-script-functions.sh)
+# TTL_MIN=0 (declared in @SHAREDIR@/pdns-api-script-functions.sh)
+# TTL_MAX=2147483647 (declared in @SHAREDIR@/pdns-api-script-functions.sh)
 REFRESH=1200
 REFRESH_MIN=1
 REFRESH_MAX=2147483647
@@ -295,5 +296,6 @@ REQUEST_BODY_TAIL
         --data @-\
         http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones < "$CURL_INFILE" > "$CURL_OUTFILE"
 
+    # TODO: report on non-zero curl exit status, (connection failures), and exit
     process_curl_output "Create zone operation failed:"
 fi

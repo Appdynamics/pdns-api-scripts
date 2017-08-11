@@ -2,18 +2,26 @@
 
 #FIXME: add license header
 
+if ! [ "$DEBUG" == true ]; then
+    DEBUG=false
+fi
+
 declare PDNS_TEST_DATA_ROOT PDNS_PID PDNS_STDERR PDNS_STDOUT
 PDNS_TEST_DNS_PORT=5354
 PDNS_TEST_HTTP_PORT=8011
 
 # Alias dig with recurring options
-DIG="dig @localhost +noquestion +nocomments +nocmd +nostats -p $PDNS_TEST_DNS_PORT"
+# include +tcp so that dig fails fast if DNS server is down
+TEST_DIG="dig @localhost +noquestion +nocomments +nocmd +nostats +tcp -p $PDNS_TEST_DNS_PORT"
 
-_cleanup(){
-    #>&2 echo "Dropping to a shell for debugging purposes.  Exit to complete cleanup."
-    #pushd $PDNS_TEST_DATA_ROOT
-    #/bin/bash
-    #popd
+_test_cleanup(){
+    if $DEBUG; then
+        >&2 echo "Dropping to a shell for debugging purposes.  Exit to complete cleanup."
+        pushd $PDNS_TEST_DATA_ROOT
+        /bin/bash
+        popd
+    fi
+
     if [ -n "$PDNS_PID" ]; then
         if kill -TERM $PDNS_PID >/dev/null 2>&1; then
             >&2 echo "Terminated pdns_server pid $PDNS_PID"
@@ -27,6 +35,7 @@ _cleanup(){
     # since we displace _shunit_cleanup() with 'trap _cleanup EXIT', call it after test-specific cleanup is complete
     _shunit_cleanup EXIT
 }
+
 
 # $1: number of random alphanumeric characters to output
 _random_alphanumeric_chars(){
@@ -49,11 +58,11 @@ oneTimeSetUp(){
     PDNS_STDOUT="$PDNS_TEST_DATA_ROOT/pdns.out"
     PDNS_STDERR="$PDNS_TEST_DATA_ROOT/pdns.err"
 
-    trap _cleanup EXIT
+    trap _test_cleanup EXIT
 
     # generate temporary pdns config / sqlite database
     @PDNS_SQLITE_LIBEXEC@/init-pdns-sqlite3-db-and-config.sh -n -C "$PDNS_CONF_DIR" -D "$PDNS_SQLITE_DIR"\
-        -p $PDNS_TEST_DNS_PORT -H $PDNS_TEST_HTTP_PORT -s "$PDNS_TEST_DATA_ROOT"
+        -p $PDNS_TEST_DNS_PORT -P 0 -q 0 -H $PDNS_TEST_HTTP_PORT -s "$PDNS_TEST_DATA_ROOT"
 
     # start pdns_server, redirect stdout, stderr to files in $PDNS_TEST_DATA_ROOT and background
     >&2 echo "Starting test pdns_server from $PDNS_TEST_DATA_ROOT"

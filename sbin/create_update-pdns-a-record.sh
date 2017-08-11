@@ -151,10 +151,10 @@ cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
                             "disabled": false,
                             "set-ptr": false
                         }
-                    ]
+                    ],
+                "comments": []
             }
-        ],
-    "comments": []
+        ]
 }
 PATCH_REQUEST_BODY
 
@@ -174,4 +174,5 @@ curl $CURL_VERBOSE\
         < "$CURL_INFILE" \
         > "$CURL_OUTFILE"
 
+# TODO: report on non-zero curl exit status, (connection failures), and exit
 process_curl_output "Create / update A record operation failed:"

@@ -27,7 +27,7 @@ testCreateUpdateARecord(){
     # assert that the A record was created with all script parameters present
     assertEquals "Expected, actual A records do not match:" \
         "$RECORD_NAME.$ZONE_NAME $TTL"$'\t'IN$'\t'A$'\t'"$RECORD_IP" \
-        "$($DIG $RECORD_NAME.$ZONE_NAME A)"
+        "$($TEST_DIG $RECORD_NAME.$ZONE_NAME A)"
 
     # assert that the A record's complementary PTR record was created
     # FIXME: ptr scripts seem woefully broken, test and fix them before continuing here...

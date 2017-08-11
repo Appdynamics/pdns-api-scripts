@@ -1,5 +1,10 @@
 # FIXME: add license header here
 
+# Shared constants
+TTL=86400
+TTL_MIN=0
+TTL_MAX=2147483647
+
 # 'declare' variables we set with 'eval' below just to keep the IDE happy
 declare PDNS_API_IP \
     PDNS_API_PORT \
@@ -8,7 +13,8 @@ declare PDNS_API_IP \
 declare DEBUG
 
 # Alias dig for sparse output
-DIG="dig +noquestion +nocomments +nocmd +nostats"
+# include +tcp so that dig fails fast if DNS server is down
+DIG="dig +noquestion +nocomments +nocmd +nostats +tcp"
 
 _cleanup(){
     if [ -f "$CURL_INFILE" ]; then
@@ -84,7 +90,7 @@ get_host_by_addr(){
 
 # return 0 (true) if given exactly one argument, and $1 is a valid hostname
 is_valid_dns_name(){
-    [ ${#@} -eq 1 ] && [[ $1 =~ ^([-A-Za-z0-9]{2,}\.)+$ ]]
+    [ ${#@} -eq 1 ] && [[ $1 =~ ^([-A-Za-z0-9]{2,}\.)+$ ]] || [[ $1 =~ ^([0-9]{1,3}\.){1,4}in-addr\.arpa\.$ ]]
 }
 
 is_valid_ipv4_address(){
@@ -134,8 +140,28 @@ get_zone_part(){
 }
 
 zone_exists(){
-        [[ $(curl -s -w \\n%{http_code}\\n --header "X-API-KEY: $PDNS_API_KEY" \
-            http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1 | tail -1) -eq 200 ]]
+    HTTP_STATUS_CODE=$(curl -s -w \\n%{http_code}\\n --header "X-API-KEY: $PDNS_API_KEY" \
+        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1 | tail -1)
+
+    if [ $? -ne 0 ]; then
+        >&2 echo "Unable to contact PDNS REST API at '$PDNS_API_IP:$PDNS_API_PORT'"
+        >&2 echo "Exiting."
+        exit 1
+    fi
+
+    case $HTTP_STATUS_CODE in
+        200)
+            true
+        ;;
+        422)
+            false
+        ;;
+        *)
+            >&2 echo "Unexpected HTTP status code, $HTTP_STATUS_CODE, when checking existence of zone:"
+            >&2 echo "$1"
+            >&2 echo "Exiting."
+        ;;
+    esac
 }
 
 trailing_dot_msg(){

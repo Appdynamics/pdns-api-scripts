@@ -25,7 +25,10 @@ declare PDNS_API_IP \
     PDNS_API_KEY \
     DIG \
     CURL_INFILE \
-    CURL_OUTFILE
+    CURL_OUTFILE \
+    TTL \
+    TTL_MIN \
+    TTL_MAX
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
@@ -40,12 +43,9 @@ cleanup(){
 
 trap cleanup EXIT
 
-# $TTL, TTL_LINE, TTL_FLAG intentionally left empty.
-TTL=
-TTL_LINE=
+# TTL_FLAG intentionally left empty.
 TTL_FLAG=
-TTL_MIN=0
-TTL_MAX=2147483647
+
 
 DEBUG=false
 DEBUG_FLAG=
@@ -60,10 +60,7 @@ while getopts ":t:cdC:h" flag; do
     case $flag in
         t)
             if test "$OPTARG" -ge $TTL_MIN >/dev/null 2>&1 && test "$OPTARG" -le $TTL_MAX >/dev/null 2>&1; then
-                # FIXME: PATCH /api/v1/servers/:server_id/zones/:zone_id with changetype=REPLACE may not accept
-                # a missing "ttl" field.
                 TTL=$OPTARG
-                TTL_LINE="\"ttl\": $TTL,"
             else
                 >&2 echo "Record TTL must be an integer from $TTL_MIN to $TTL_MAX."
                 ((input_errors++))
@@ -127,7 +124,7 @@ NEW_PTR_ZONE=`get_ptr_zone_part $NEW_PTR_IP`
 
 if ! zone_exists $NEW_PTR_ZONE; then
     if $CREATE_NONEXISTENT_ZONE; then
-        bash -x create-pdns-zone.sh -C "$PDNS_CONF" $DEBUG_FLAG $NEW_PTR_ZONE localhost.
+        create-pdns-zone.sh -C "$PDNS_CONF" $DEBUG_FLAG $NEW_PTR_ZONE localhost.
     else
         >&2 echo "Inverse zone $NEW_PTR_ZONE does not exist."
         >&2 echo "Exiting without changes."
@@ -150,21 +147,20 @@ cat > $CURL_INFILE <<PATCH_REQUEST_BODY
     "rrsets":
         [
             {
-                "name": "$NEW_PTR_HOST_PART",
+                "name": "$NEW_PTR_HOST_PART.$NEW_PTR_ZONE",
                 "type": "PTR",
-                $TTL_LINE
+                "ttl": $TTL,
                 "changetype": "REPLACE",
                 "records":
                     [
                         {
                             "content": "$NEW_PTR_HOSTNAME",
-                            "disabled": false,
-                            "set-ptr": false
+                            "disabled": false
                         }
-                    ]
+                    ],
+                "comments": []
             }
-        ],
-    "comments": []
+        ]
 }
 PATCH_REQUEST_BODY
 
@@ -181,4 +177,5 @@ curl $CURL_VERBOSE\
     -w \\n%{http_code}\\n\
     http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$NEW_PTR_ZONE > "$CURL_OUTFILE" < "$CURL_INFILE"
 
+# TODO: report on non-zero curl exit status, (connection failures), and exit
 process_curl_output "Create / update PTR record failed:"

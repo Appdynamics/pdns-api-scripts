@@ -41,11 +41,13 @@ trap cleanup EXIT
 
 # $1: reverse-zone name to query, i.e. 127.in-addr.arpa.
 reverse_zone_is_empty(){
-    [[ 0 -eq $($DIG @"$PDNS_API_IP" "$1" AXFR | awk 'BEGIN{n=0}{if($4=="PTR")n++;}END{print n}') ]]
+    [[ 0 -eq $($DIG @"$PDNS_API_IP" "$1" AXFR | awk 'BEGIN{n=0};{if($4=="PTR"){n++;}};END{print n}') ]]
 }
 
+PDNS_CONF=@ETCDIR@/pdns/pdns.conf
+
 input_errors=0
-while getopts ":Ddh" flag; do
+while getopts ":DdC:h" flag; do
     case $flag in
         D)
             DELETE_EMPTY_ZONE=true
@@ -55,15 +57,20 @@ while getopts ":Ddh" flag; do
             DEBUG=true
             DEBUG_FLAG=-d
         ;;
+        C)
+            PDNS_CONF="$OPTARG"
+        ;;
         h)
             HELP=true
-        ;;
+         ;;
         *)
             >&2 echo "'-$OPTARG' is not a valid option flag."
             ((input_errors++))
         ;;
     esac
 done
+
+read_pdns_config "$PDNS_CONF"
 
 if $HELP; then
     echo "$USAGE"
@@ -93,6 +100,7 @@ ZONE=`get_ptr_zone_part $1`
 
 CURL_OUTFILE="$(mktemp)"
 
+# TODO: report on non-zero curl exit status, (connection failures), and exit
 curl $CURL_VERBOSE\
     --request PATCH\
     --header "Content-Type: application/json"\
@@ -104,19 +112,18 @@ curl $CURL_VERBOSE\
     "rrsets":
         [
             {
-                "name": "$HOST",
+                "name": "$HOST.$ZONE",
                 "type": "PTR",
                 "changetype": "DELETE"
             }
-        ],
-    "comments": []
+        ]
 }
 PATCH_REQUEST_BODY
 
 
-if [[ $(tail -1 "$CURL_OUTFILE") -eq 200 ]]; then
+if [[ $(tail -1 "$CURL_OUTFILE") =~ ^2 ]]; then
     if $DELETE_EMPTY_ZONE && reverse_zone_is_empty $ZONE; then
-        delete-pdns-zone.sh $ZONE
+        delete-pdns-zone.sh -C "$PDNS_CONF" $ZONE
     fi
 else
     # pretty-print the error message JSON

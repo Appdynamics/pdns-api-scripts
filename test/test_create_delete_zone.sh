@@ -20,9 +20,9 @@ testCreateAndDeleteZone(){
 
     # FIXME: dig it and assert we got what we expected
     # dig ... AXFR prints SOA records on the first and last line by design
-    local DIG_OUT="$($DIG +onesoa $ZONE_NAME AXFR)"
+    local DIG_OUT="$($TEST_DIG +onesoa $ZONE_NAME AXFR)"
     if [ "$DIG_OUT" == "; Transfer failed." ]; then
-        >&2 echo "testCreateAndDeleteZone '$DIG +onesoa $ZONE_NAME AXFR' failed."
+        >&2 echo "testCreateAndDeleteZone '$TEST_DIG +onesoa $ZONE_NAME AXFR' failed."
         >&2 echo "pdns_server STDOUT:"
         >&2 cat "$PDNS_STDOUT"
         >&2 echo "pdns_server STDERR:"
@@ -79,7 +79,7 @@ testCreateAndDeleteZone(){
     delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
     # assert that zone was deleted
-    assertEquals "Failed to delete test zone. " "; Transfer failed." "$($DIG +onesoa $ZONE_NAME AXFR)"
+    assertEquals "Failed to delete test zone. " "; Transfer failed." "$($TEST_DIG +onesoa $ZONE_NAME AXFR)"
 }
 
 testCreateAndDeleteZoneWithDefaults(){
@@ -100,9 +100,9 @@ testCreateAndDeleteZoneWithDefaults(){
 
     # FIXME: dig it and assert we got what we expected
     # dig ... AXFR prints SOA records on the first and last line by design
-    local DIG_OUT="$($DIG +onesoa $ZONE_NAME AXFR)"
+    local DIG_OUT="$($TEST_DIG +onesoa $ZONE_NAME AXFR)"
     if [ "$DIG_OUT" == "; Transfer failed." ]; then
-        >&2 echo "testCreateAndDeleteZoneWithDefaults '$DIG +onesoa $ZONE_NAME AXFR' failed."
+        >&2 echo "testCreateAndDeleteZoneWithDefaults '$TEST_DIG +onesoa $ZONE_NAME AXFR' failed."
         >&2 echo "pdns_server STDOUT:"
         >&2 cat "$PDNS_STDOUT"
         >&2 echo "pdns_server STDERR:"
@@ -159,5 +159,5 @@ testCreateAndDeleteZoneWithDefaults(){
     delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
     #assert that zone was deleted
-    assertEquals "Failed to delete test zone. " "; Transfer failed." "$($DIG +onesoa $ZONE_NAME AXFR)"
+    assertEquals "Failed to delete test zone. " "; Transfer failed." "$($TEST_DIG +onesoa $ZONE_NAME AXFR)"
 }
