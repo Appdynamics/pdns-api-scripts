@@ -2,7 +2,7 @@
 
 #FIXME: add license header
 
-testCreateUpdateARecord(){
+testCreateUpdateDeleteARecord(){
     local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
     local PRIMARY_MASTER=primary.master.$ZONE_NAME
     local RECORD_NAME=$(_random_alphanumeric_chars 11)
@@ -25,9 +25,23 @@ testCreateUpdateARecord(){
     create_update-pdns-a-record.sh -t $TTL -p -d -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME $RECORD_IP
 
     # assert that the A record was created with all script parameters present
-    assertEquals "Expected, actual A records do not match:" \
-        "$RECORD_NAME.$ZONE_NAME $TTL"$'\t'IN$'\t'A$'\t'"$RECORD_IP" \
-        "$($TEST_DIG $RECORD_NAME.$ZONE_NAME A)"
+    # FIXME: dig is actually really flaky about spaces, and tabs, better to eval awk output and assert on the
+    # resulting variables.
+    #assertEquals "Expected, actual A records do not match:" \
+    #    "$RECORD_NAME.$ZONE_NAME $TTL"$'\t'IN$'\t'A$'\t'"$RECORD_IP" \
+    #    "$($TEST_DIG $RECORD_NAME.$ZONE_NAME A)"
+    local DIG_TTL
+    local DIG_RECORD_IP
+    eval $($TEST_DIG $RECORD_NAME.$ZONE_NAME A | awk '
+        /[\t\s]A[\t\s]/{
+            if($1 == '"$RECORD_NAME.$ZONE_NAME"'){
+                print "DIG_TTL="$2;
+                print "DIG_RECORD_IP="$5
+            }
+        }
+    ')
+    assertEquals "A record ttl mismatch" "$TTL" "$DIG_TTL"
+    assertEquals "A record IP mismatch" "$RECORD_IP" "$DIG_RECORD_IP"
 
     # assert that the A record's complementary PTR record was created
     # FIXME: ptr scripts seem woefully broken, test and fix them before continuing here...
@@ -43,6 +57,6 @@ testCreateUpdateARecord(){
 
 }
 
-testUpdateARecordWithDefaults(){
+testCreateARecordWithDefaults(){
     fail "Test not fully implemented" #FIXME: placeholder
 }
