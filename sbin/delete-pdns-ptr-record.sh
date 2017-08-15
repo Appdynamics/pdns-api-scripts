@@ -100,7 +100,7 @@ ZONE=`get_ptr_zone_part $1`
 
 CURL_OUTFILE="$(mktemp)"
 
-curl $CURL_VERBOSE\
+curl -s $CURL_VERBOSE\
     --request PATCH\
     --header "Content-Type: application/json"\
     --header "X-API-Key: $PDNS_API_KEY"\

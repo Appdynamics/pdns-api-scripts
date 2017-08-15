@@ -59,7 +59,7 @@ fi
 
 if is_valid_dns_name "$1"; then
     # TODO: report on non-zero curl exit status, (connection failures), and exit
-    curl $CURL_VERBOSE\
+    curl -s $CURL_VERBOSE\
         --request DELETE\
         --header "X-API-Key: $PDNS_API_KEY"\
         http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1

@@ -169,7 +169,7 @@ if $DEBUG; then
     >&2 jq < $CURL_INFILE
 fi
 
-curl $CURL_VERBOSE\
+curl -s $CURL_VERBOSE\
     --request PATCH\
     --header "Content-Type: application/json"\
     --header "X-API-Key: $PDNS_API_KEY"\

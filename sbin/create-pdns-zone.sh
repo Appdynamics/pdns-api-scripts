@@ -288,7 +288,7 @@ REQUEST_BODY_TAIL
 
     # REST CALL to create zone
     CURL_OUTFILE="$(mktemp)"
-    curl $CURL_VERBOSE\
+    curl -s $CURL_VERBOSE\
         --request POST\
         --header "Content-Type: application/json"\
         --header "X-API-Key: $PDNS_API_KEY"\

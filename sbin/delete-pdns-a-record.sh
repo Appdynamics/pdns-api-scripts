@@ -98,7 +98,7 @@ ZONE=$(get_zone_part $A_RECORD_NAME)
 
 CURL_OUTFILE="$(mktemp)"
 
-curl $CURL_VERBOSE\
+curl -s $CURL_VERBOSE\
     --request PATCH\
     --header "Content-Type: application/json"\
     --header "X-API-Key: $PDNS_API_KEY"\
