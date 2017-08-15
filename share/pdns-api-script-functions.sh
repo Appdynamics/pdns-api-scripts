@@ -171,24 +171,32 @@ trailing_dot_msg(){
 
 # If $DEBUG was set, or curl received a non-2xx status code
 # Prints the status of the request and the response body on STDERR
-# and calls 'exit 1' if curl received a non-2xx status code.
-# Calls exit 0, otherwise.
-# $1: "Message to print if request failed."
+# $1: curl exit code
+# $2: "Message to print if request failed."
 process_curl_output(){
-    if [[ $(tail -1 "$CURL_OUTFILE") =~ ^2 ]]; then
-        ERROR=false
-    else
-        ERROR=true
-    fi
+    local ERROR
 
-    if $ERROR || $DEBUG; then
-        if $ERROR; then
-            >&2 echo "$1"
+    if [ "$1" -eq 0 ]; then
+        if [[ $(tail -1 "$CURL_OUTFILE") =~ ^2 ]]; then
+            ERROR=false
         else
-            >&2 echo "Response body:"
+            ERROR=true
         fi
-        head -1 "$CURL_OUTFILE" | >&2 jq
-        $ERROR || exit 1
-        exit 0
+
+        if $ERROR || $DEBUG; then
+            if $ERROR; then
+                >&2 echo "$2"
+            else
+                >&2 echo "Response body:"
+            fi
+            head -1 "$CURL_OUTFILE" | >&2 jq
+            $ERROR && return 1
+            return 0
+        fi
+    else
+        >&2 echo "Unable to connect to PowerDNS REST API"
+        >&2 echo "'curl' exit code: $1"
+        >&2 echo "Exiting."
+        exit 1
     fi
 }

@@ -296,6 +296,5 @@ REQUEST_BODY_TAIL
         --data @-\
         http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones < "$CURL_INFILE" > "$CURL_OUTFILE"
 
-    # TODO: report on non-zero curl exit status, (connection failures), and exit
-    process_curl_output "Create zone operation failed:"
+    process_curl_output $? "Create zone operation failed:"
 fi

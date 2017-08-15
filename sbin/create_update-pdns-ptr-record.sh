@@ -177,5 +177,4 @@ curl $CURL_VERBOSE\
     -w \\n%{http_code}\\n\
     http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$NEW_PTR_ZONE > "$CURL_OUTFILE" < "$CURL_INFILE"
 
-# TODO: report on non-zero curl exit status, (connection failures), and exit
-process_curl_output "Create / update PTR record failed:"
+process_curl_output $? "Create / update PTR record failed:"

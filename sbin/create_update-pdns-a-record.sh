@@ -29,7 +29,11 @@ declare PDNS_API_IP \
     PDNS_API_PORT \
     PDNS_API_KEY \
     CURL_INFILE \
-    CURL_OUTFILE
+    CURL_OUTFILE \
+    TTL \
+    TTL_MIN \
+    TTL_MAX
+
 
 PDNS_CONF=@ETCDIR@/pdns/pdns.conf
 
@@ -41,22 +45,15 @@ DEBUG_FLAG=
 HELP=false
 
 
-# $TTL, TTL_LINE, TTL_FLAG intentionally left empty.
-TTL=
-TTL_LINE=
+# TTL_FLAG intentionally left empty.
 TTL_FLAG=
-TTL_MIN=0
-TTL_MAX=2147483647
 
 input_errors=0
 while getopts ":t:pdC:h" flag; do
     case $flag in
         t)
             if test "$OPTARG" -ge $TTL_MIN >/dev/null 2>&1 && test "$OPTARG" -le $TTL_MAX >/dev/null 2>&1; then
-                # FIXME: PATCH /api/v1/servers/:server_id/zones/:zone_id with changetype=REPLACE may not accept
-                # a missing "ttl" field.
                 TTL=$OPTARG
-                TTL_LINE="\"ttl\": $TTL,"
             else
                 >&2 echo "Record TTL must be an integer from $TTL_MIN to $TTL_MAX."
                 ((input_errors++))
@@ -141,7 +138,7 @@ cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
         [
             {
                 "name": "$A_RECORD_NAME",
-                $TTL_LINE
+                "ttl": "$TTL"
                 "type": "A",
                 "changetype": "REPLACE",
                 "records":
@@ -174,5 +171,4 @@ curl $CURL_VERBOSE\
         < "$CURL_INFILE" \
         > "$CURL_OUTFILE"
 
-# TODO: report on non-zero curl exit status, (connection failures), and exit
-process_curl_output "Create / update A record operation failed:"
+process_curl_output $? "Create / update A record operation failed:"

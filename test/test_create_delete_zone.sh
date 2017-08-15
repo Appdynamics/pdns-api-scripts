@@ -13,9 +13,14 @@ testCreateAndDeleteZone(){
     local EXPIRY=1209599
     local NEG_TTL=61
     local NS_TTL=1209601
+    local DEBUG_FLAG
+
+    if [ "$ENABLE_DEBUG" == "true" ]; then
+        DEBUG_FLAG=-d
+    fi
 
     # create a zone and exercise all script params
-    create-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -r $REFRESH \
+    create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -r $REFRESH \
         -R $RETRY -e $EXPIRY -n $NEG_TTL -N $NS_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
     # FIXME: dig it and assert we got what we expected
@@ -76,7 +81,7 @@ testCreateAndDeleteZone(){
     fi
 
     # delete zone
-    delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
+    delete-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
     # assert that zone was deleted
     assertEquals "Failed to delete test zone. " "; Transfer failed." "$($TEST_DIG +onesoa $ZONE_NAME AXFR)"
@@ -94,9 +99,14 @@ testCreateAndDeleteZoneWithDefaults(){
     local EXPIRY=1209600
     local NEG_TTL=60
     local NS_TTL=1209600
+    local DEBUG_FLAG
+
+    if [ "$ENABLE_DEBUG" == "true" ]; then
+        DEBUG_FLAG=-d
+    fi
 
     # create a zone and exercise all script params
-    create-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
+    create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
     # FIXME: dig it and assert we got what we expected
     # dig ... AXFR prints SOA records on the first and last line by design
@@ -156,7 +166,7 @@ testCreateAndDeleteZoneWithDefaults(){
     fi
 
     # delete zone
-    delete-pdns-zone.sh -d -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
+    delete-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 
     #assert that zone was deleted
     assertEquals "Failed to delete test zone. " "; Transfer failed." "$($TEST_DIG +onesoa $ZONE_NAME AXFR)"

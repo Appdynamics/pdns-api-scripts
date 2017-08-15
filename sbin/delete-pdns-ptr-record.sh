@@ -100,7 +100,6 @@ ZONE=`get_ptr_zone_part $1`
 
 CURL_OUTFILE="$(mktemp)"
 
-# TODO: report on non-zero curl exit status, (connection failures), and exit
 curl $CURL_VERBOSE\
     --request PATCH\
     --header "Content-Type: application/json"\
@@ -120,13 +119,10 @@ curl $CURL_VERBOSE\
 }
 PATCH_REQUEST_BODY
 
-
-if [[ $(tail -1 "$CURL_OUTFILE") =~ ^2 ]]; then
+if process_curl_output $? "Failed to delete PTR record: $HOST.$ZONE"; then
     if $DELETE_EMPTY_ZONE && reverse_zone_is_empty $ZONE; then
         delete-pdns-zone.sh -C "$PDNS_CONF" $ZONE
+    else
+        exit 0
     fi
-else
-    # pretty-print the error message JSON
-    head -1 "$CURL_OUTFILE" | jq
-    exit 1
 fi
