@@ -34,7 +34,7 @@ testCreateUpdateDeleteARecord(){
     local DIG_RECORD_IP
     eval $($TEST_DIG $RECORD_NAME.$ZONE_NAME A | awk '
         /[\t\s]A[\t\s]/{
-            if($1 == '"$RECORD_NAME.$ZONE_NAME"'){
+            if($1 == "'"$RECORD_NAME.$ZONE_NAME"'"){
                 print "DIG_TTL="$2;
                 print "DIG_RECORD_IP="$5
             }

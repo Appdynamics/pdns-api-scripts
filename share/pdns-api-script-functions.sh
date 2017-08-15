@@ -160,6 +160,7 @@ zone_exists(){
             >&2 echo "Unexpected HTTP status code, $HTTP_STATUS_CODE, when checking existence of zone:"
             >&2 echo "$1"
             >&2 echo "Exiting."
+            exit 1
         ;;
     esac
 }

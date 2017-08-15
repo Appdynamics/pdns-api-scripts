@@ -132,7 +132,7 @@ if $MANAGE_PTR; then
     if [ -n "$TTL" ]; then
         TTL_FLAG="-t $TTL"
     fi
-    create_update-pdns-ptr-record.sh -c $DEBUG_FLAG $TTL_FLAG $A_RECORD_IP $A_RECORD_NAME
+    create_update-pdns-ptr-record.sh -C "$PDNS_CONF" -c $DEBUG_FLAG $TTL_FLAG $A_RECORD_IP $A_RECORD_NAME
 fi
 
 cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
