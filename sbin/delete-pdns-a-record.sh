@@ -20,7 +20,7 @@ Options:
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
-declare PDNS_API_IP \
+declare PDNS_IP \
     PDNS_API_PORT \
     PDNS_API_KEY \
     CURL_INFILE \
@@ -101,15 +101,25 @@ fi
 
 ZONE=$(get_zone_part $A_RECORD_NAME)
 
+PTR_FQDN=$(get_host_by_addr $A_RECORD_IP)
+if $DELETE_PTR; then
+    if [ -n "$PTR_FQDN" ]; then
+        if [ "$PTR_FQDN" != "$A_RECORD_NAME" ]; then
+            >&2 echo "A record for $A_RECORD_NAME"
+            >&2 echo "Does not match PTR record for $A_RECORD_IP"
+            >&2 echo "Exiting without changes."
+            exit 1
+        fi
+    else
+        >&2 echo "WARNING: Corresponding PTR record for $A_RECORD_NAME"
+        >&2 echo "does not exist.  Unable to delete."
+        DELETE_PTR=false
+    fi
+fi
+
 CURL_OUTFILE="$(mktemp)"
 
-curl -s $CURL_VERBOSE\
-    --request PATCH\
-    --header "Content-Type: application/json"\
-    --header "X-API-Key: $PDNS_API_KEY"\
-    --data @-\
-    -w \\n%{http_code}\\n\
-    http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$ZONE <<PATCH_REQUEST_BODY > "$CURL_OUTFILE"
+cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
 {
     "rrsets":
         [
@@ -122,12 +132,21 @@ curl -s $CURL_VERBOSE\
 }
 PATCH_REQUEST_BODY
 
+if $DEBUG; then
+    >&2 echo "Patch request body:"
+    >&2 jq < "$CURL_INFILE"
+fi
+
+curl -s $CURL_VERBOSE\
+    --request PATCH\
+    --header "Content-Type: application/json"\
+    --header "X-API-Key: $PDNS_API_KEY"\
+    --data @-\
+    -w \\n%{http_code}\\n\
+    http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$ZONE < "$CURL_INFILE" > "$CURL_OUTFILE"
+
 if process_curl_output $? "Failed to Delete A record: $A_RECORD_NAME"; then
     if $DELETE_PTR; then
-        if [[ -n "$(get_host_by_addr $A_RECORD_IP)" ]]; then
-            delete-pdns-ptr-record.sh $DEBUG_FLAG -D -C $PDNS_CONF $A_RECORD_IP
-        else
-            >&2 echo "WARNING: PTR record for $A_RECORD_IP does not exist. Unable to delete."
-        fi
+        delete-pdns-ptr-record.sh $DEBUG_FLAG -D -C $PDNS_CONF $A_RECORD_IP
     fi
 fi

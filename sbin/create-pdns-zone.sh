@@ -42,7 +42,7 @@ PDNS_CONF=@ETCDIR@/pdns/pdns.conf
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
-declare PDNS_API_IP \
+declare PDNS_IP \
     PDNS_API_PORT \
     PDNS_API_KEY \
     CURL_INFILE \
@@ -181,7 +181,7 @@ fi
 
 if [ -z "$HOSTMASTER_EMAIL" ]; then
     HOSTMASTER_EMAIL=$(curl -s --header "X-API-KEY: $PDNS_API_KEY"\
-            http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/config | \
+            http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/config | \
             jq -r '.[] | select(.name=="default-soa-mail").value').
     if [ -z "$HOSTMASTER_EMAIL" ]; then
         >&2 echo "Hostmaster email not specified and 'default-soa-mail' not configured in pdns."
@@ -297,7 +297,7 @@ REQUEST_BODY_TAIL
         --header "X-API-Key: $PDNS_API_KEY"\
         -w \\n%{http_code}\\n \
         --data @-\
-        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones < "$CURL_INFILE" > "$CURL_OUTFILE"
+        http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones < "$CURL_INFILE" > "$CURL_OUTFILE"
 
     process_curl_output $? "Create zone operation failed:"
 fi

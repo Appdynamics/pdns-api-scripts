@@ -18,7 +18,7 @@ PDNS_CONF=@ETCDIR@/pdns/pdns.conf
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
-declare PDNS_API_IP \
+declare PDNS_IP \
     PDNS_API_PORT \
     PDNS_API_KEY
 
@@ -71,7 +71,7 @@ if is_valid_dns_name "$1"; then
     curl -s $CURL_VERBOSE\
         --request DELETE\
         --header "X-API-Key: $PDNS_API_KEY"\
-        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1
+        http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1
     exit $?
 else
     >&2 echo "'$1' is not a correctly"

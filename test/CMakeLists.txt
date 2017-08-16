@@ -9,7 +9,7 @@ endforeach()
 # link test scripts for individual programs
 file(GLOB test_scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "test_*.sh")
 foreach(test_script ${test_scripts})
-    file(READ ${CMAKE_CURRENT_BINARY_DIR}/setup_and_teardown.sh.out FILE_CONTENT)
+    file(READ ${CMAKE_CURRENT_BINARY_DIR}/pdns-api-test-functions.sh.out FILE_CONTENT)
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/${test_script} "${FILE_CONTENT}\n")
     # enable debugging outut for testing of individual programs
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/${test_script} "ENABLE_DEBUG=true\n")
@@ -19,7 +19,7 @@ foreach(test_script ${test_scripts})
 endforeach()
 
 # link a test script for every program
-file(READ ${CMAKE_CURRENT_BINARY_DIR}/setup_and_teardown.sh.out FILE_CONTENT)
+file(READ ${CMAKE_CURRENT_BINARY_DIR}/pdns-api-test-functions.sh.out FILE_CONTENT)
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/test_all_api_scripts.sh "${FILE_CONTENT}\n")
 foreach(test_script ${test_scripts})
     file(READ ${CMAKE_CURRENT_BINARY_DIR}/${test_script}.out FILE_CONTENT)

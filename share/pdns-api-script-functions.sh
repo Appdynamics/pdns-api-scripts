@@ -6,7 +6,8 @@ TTL_MIN=0
 TTL_MAX=2147483647
 
 # 'declare' variables we set with 'eval' below just to keep the IDE happy
-declare PDNS_API_IP \
+declare PDNS_IP \
+    PDNS_PORT \
     PDNS_API_PORT \
     PDNS_API_KEY \
 
@@ -31,16 +32,19 @@ CURL_INFILE="$(mktemp)"
 CURL_OUTFILE="$(mktemp)"
 
 
-# Sets $PDNS_API_IP, $PDNS_API_PORT, $PDNS_API_KEY based on the contents a PowerDNS config file
+# Sets $PDNS_IP, $PDNS_API_PORT, $PDNS_API_KEY based on the contents a PowerDNS config file
 # $1: path to the active PowerDNS config file
 read_pdns_config(){
     local API_KEY_CONF
     local CONFIG_ERRORS=false
 
-    # set $PDNS_API_IP and $PDNS_API_PORT based on the contents of '@ETCDIR@/pdns/pdns.conf'
+    # set $PDNS_IP and $PDNS_API_PORT based on the contents of '@ETCDIR@/pdns/pdns.conf'
     if [ -r "$1" ]; then
-        eval $(awk -F = '/^webserver-address=/{print "PDNS_API_IP="$2};/^webserver-port=/{print "PDNS_API_PORT="$2};
-            /^include-dir=/{printf("API_KEY_CONF=\"%s/api-key.conf\"\n", $2)}' "$1")
+        eval $(awk -F = '
+            /^webserver-address=/{print "PDNS_IP="$2};/^webserver-port=/{print "PDNS_API_PORT="$2};
+            /^include-dir=/{printf("API_KEY_CONF=\"%s/api-key.conf\"\n", $2)}
+            /^local-port=/{print "PDNS_PORT="$2};
+        ' "$1")
         if [ -r "$API_KEY_CONF" ]; then
             # set $PDNS_API_KEY based on the contents of '@ETCDIR@/pdns/pdns.conf.d/api-key.conf'
             eval $(awk -F = '/^api-key=/{print "PDNS_API_KEY="$2"\n"}' "$API_KEY_CONF")
@@ -57,7 +61,7 @@ read_pdns_config(){
         >&2 echo "PowerDNS configuration file '$1' is not readable."
         return 1
     fi
-    if [ -z "$PDNS_API_IP" ]; then
+    if [ -z "$PDNS_IP" ]; then
         >&2 echo "'webserver-address' parameter is missing from '$1'"
         CONFIG_ERRORS=true
     fi
@@ -74,18 +78,17 @@ read_pdns_config(){
     fi
 }
 
+
 # Print an IP address to STDOUT given a DNS server address and a fully-qualified hostname to resolve
-# $1: IP address or hostname of DNS server to query
-# $2: fully-qualified hostname to resolve
+# $1: fully-qualified hostname to resolve
 get_host_by_name(){
-    $DIG +short @"$1" "$2" 2>/dev/null | tail -1
+    $DIG +short -p $PDNS_PORT @$PDNS_IP "$1" 2>/dev/null | tail -1
 }
 
 # Print a hostname to STDOUT given a DNS server address and an IP address to lookup in reverse
-# $1: IP address or hostname of the DNS server to query
-# $2: IP address to lookup in reverse
+# $1: IP address to lookup in reverse
 get_host_by_addr(){
-    $DIG +short @"$1" -x "$2" 2>/dev/null
+    $DIG +short -p $PDNS_PORT @$PDNS_IP -x "$1" 2>/dev/null
 }
 
 # return 0 (true) if given exactly one argument, and $1 is a valid hostname
@@ -141,10 +144,10 @@ get_zone_part(){
 
 zone_exists(){
     HTTP_STATUS_CODE=$(curl -s -w \\n%{http_code}\\n --header "X-API-KEY: $PDNS_API_KEY" \
-        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1 | tail -1)
+        http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1 | tail -1)
 
     if [ $? -ne 0 ]; then
-        >&2 echo "Unable to contact PDNS REST API at '$PDNS_API_IP:$PDNS_API_PORT'"
+        >&2 echo "Unable to contact PDNS REST API at '$PDNS_IP:$PDNS_API_PORT'"
         >&2 echo "Exiting."
         exit 1
     fi

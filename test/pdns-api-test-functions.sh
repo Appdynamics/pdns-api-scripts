@@ -2,20 +2,22 @@
 
 #FIXME: add license header
 
-if ! [ "$DEBUG" == true ]; then
-    DEBUG=false
+if ! [ "$DEBUG_SHELL" == true ]; then
+    DEBUG_SHELL=false
 fi
 
 declare PDNS_TEST_DATA_ROOT PDNS_PID PDNS_STDERR PDNS_STDOUT
 PDNS_TEST_DNS_PORT=5354
 PDNS_TEST_HTTP_PORT=8011
+CACHE_TTL=1
+SLEEP_TIME=$((CACHE_TTL+1))
 
 # Alias dig with recurring options
 # include +tcp so that dig fails fast if DNS server is down
 TEST_DIG="dig @localhost +noquestion +nocomments +nocmd +nostats +tcp -p $PDNS_TEST_DNS_PORT"
 
 _test_cleanup(){
-    if $DEBUG; then
+    if $DEBUG_SHELL; then
         >&2 echo "Dropping to a shell for debugging purposes.  Exit to complete cleanup."
         pushd $PDNS_TEST_DATA_ROOT
         /bin/bash
@@ -51,6 +53,12 @@ _random_ipv4_octet(){
     echo $((RANDOM % 255 ))
 }
 
+_wait_for_cache_expiry(){
+    local
+    >&2 echo "Waiting $SLEEP_TIME seconds for PDNS cache to expire"
+    sleep $SLEEP_TIME
+}
+
 oneTimeSetUp(){
     PDNS_TEST_DATA_ROOT="$(mktemp -d)"
     PDNS_CONF_DIR="$PDNS_TEST_DATA_ROOT/conf"
@@ -62,7 +70,7 @@ oneTimeSetUp(){
 
     # generate temporary pdns config / sqlite database
     @PDNS_SQLITE_LIBEXEC@/init-pdns-sqlite3-db-and-config.sh -n -C "$PDNS_CONF_DIR" -D "$PDNS_SQLITE_DIR"\
-        -p $PDNS_TEST_DNS_PORT -P 0 -q 0 -H $PDNS_TEST_HTTP_PORT -s "$PDNS_TEST_DATA_ROOT"
+        -p $PDNS_TEST_DNS_PORT -P $CACHE_TTL -q $CACHE_TTL -H $PDNS_TEST_HTTP_PORT -s "$PDNS_TEST_DATA_ROOT"
 
     # start pdns_server, redirect stdout, stderr to files in $PDNS_TEST_DATA_ROOT and background
     >&2 echo "Starting test pdns_server from $PDNS_TEST_DATA_ROOT"

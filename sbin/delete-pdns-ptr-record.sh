@@ -18,7 +18,8 @@ Option:
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
-declare PDNS_API_IP \
+declare PDNS_IP \
+    PDNS_PORT \
     PDNS_API_PORT \
     PDNS_API_KEY \
     DIG
@@ -41,7 +42,7 @@ trap cleanup EXIT
 
 # $1: reverse-zone name to query, i.e. 127.in-addr.arpa.
 reverse_zone_is_empty(){
-    [[ 0 -eq $($DIG @"$PDNS_API_IP" "$1" AXFR | awk 'BEGIN{n=0};{if($4=="PTR"){n++;}};END{print n}') ]]
+    [[ 0 -eq $($DIG @"$PDNS_IP" -p $PDNS_PORT "$1" AXFR | awk 'BEGIN{n=0};{if($4=="PTR"){n++;}};END{print n}') ]]
 }
 
 PDNS_CONF=@ETCDIR@/pdns/pdns.conf
@@ -109,7 +110,7 @@ curl -s $CURL_VERBOSE\
     --header "X-API-Key: $PDNS_API_KEY"\
     --data @-\
     -w \\n%{http_code}\\n\
-    http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$ZONE <<PATCH_REQUEST_BODY > "$CURL_OUTFILE"
+    http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$ZONE <<PATCH_REQUEST_BODY > "$CURL_OUTFILE"
 {
     "rrsets":
         [

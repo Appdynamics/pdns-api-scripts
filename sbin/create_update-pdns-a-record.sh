@@ -25,7 +25,7 @@ Options:
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
-declare PDNS_API_IP \
+declare PDNS_IP \
     PDNS_API_PORT \
     PDNS_API_KEY \
     CURL_INFILE \
@@ -170,7 +170,7 @@ curl -s $CURL_VERBOSE\
         --header "X-API-Key: $PDNS_API_KEY"\
         -w \\n%{http_code}\\n \
         --data @-\
-        http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$A_RECORD_ZONE \
+        http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$A_RECORD_ZONE \
         < "$CURL_INFILE" \
         > "$CURL_OUTFILE"
 

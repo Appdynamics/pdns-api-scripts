@@ -7,6 +7,7 @@ if ! declare -f get_ptr_zone_part >/dev/null; then
 fi
 
 testCreateUpdateARecord(){
+    local SLEEP_SECONDS=1
     local DEBUG_FLAG
     local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
     local PRIMARY_MASTER=primary.master.$ZONE_NAME
@@ -28,10 +29,13 @@ testCreateUpdateARecord(){
     rm -f "$SCRIPT_STDERR"
 
     # create zone
-    create-pdns-zone.sh -C "$PDNS_CONF_DIR/pdns.conf" "$ZONE_NAME" "$PRIMARY_MASTER"
+    create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" "$ZONE_NAME" "$PRIMARY_MASTER"
 
     # attempt to create A record, exercise all script parameters
-    create_update-pdns-a-record.sh -t $TTL -p $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME $RECORD_IP
+    create_update-pdns-a-record.sh -t $TTL -p $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME \
+        $RECORD_IP
+
+    _wait_for_cache_expiry
 
     # assert that the A record was created with all script parameters present
     local DIG_TTL
@@ -50,7 +54,7 @@ testCreateUpdateARecord(){
     # assert that the A record's complementary PTR record was created with all script parameters present
     local PTR_RECORD_NAME=$(get_ptr_host_part $RECORD_IP).$(get_ptr_zone_part $RECORD_IP)
     local DIG_PTR_FQDN
-    eval $($TEST_DIG @localhost -p $PDNS_TEST_DNS_PORT -x $RECORD_IP | awk '
+    eval $($TEST_DIG -x $RECORD_IP | awk '
         /[\t\s]PTR[\t\s]/{
             if($1 == "'"$PTR_RECORD_NAME"'"){
                 print "DIG_TTL="$2;
@@ -64,7 +68,10 @@ testCreateUpdateARecord(){
     # update the A record with different parameters
     RECORD_IP=$(_random_ipv4_octet).$(_random_ipv4_octet).$(_random_ipv4_octet).$(_random_ipv4_octet)
     TTL=86401
-    create_update-pdns-a-record.sh -t $TTL -p $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME $RECORD_IP
+    create_update-pdns-a-record.sh -t $TTL -p $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME \
+        $RECORD_IP
+
+    _wait_for_cache_expiry
 
     # assert that the A record was updated with all script parameters
     local DIG_TTL
@@ -73,7 +80,7 @@ testCreateUpdateARecord(){
         /[\t\s]A[\t\s]/{
             if($1 == "'"$RECORD_NAME.$ZONE_NAME"'"){
                 print "DIG_TTL="$2;
-                print "DIG_RECORD_IP="$5
+                print "DIG_RECORD_IP="$5;
             }
         }
     ')
@@ -83,7 +90,7 @@ testCreateUpdateARecord(){
 
     # assert that the PTR record was updated with all script parameters
     PTR_RECORD_NAME=$(get_ptr_host_part $RECORD_IP).$(get_ptr_zone_part $RECORD_IP)
-    eval $($TEST_DIG @localhost -p $PDNS_TEST_DNS_PORT -x $RECORD_IP | awk '
+    eval $($TEST_DIG -x $RECORD_IP | awk '
         /[\t\s]PTR[\t\s]/{
             if($1 == "'"$PTR_RECORD_NAME"'"){
                 print "DIG_TTL="$2;
@@ -96,21 +103,60 @@ testCreateUpdateARecord(){
     assertEquals "PTR record FQDN mismatch after update" "$RECORD_NAME.$ZONE_NAME" "$DIG_PTR_FQDN"
 
     # delete the zone
-    delete-pdns-zone.sh $DEBUG_FLAG "$PDNS_CONF_DIR/pdns.conf" "$ZONE_NAME"
+    delete-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" "$ZONE_NAME"
 }
 
-testDeleteArecord(){
+testDeleteARecord(){
     local DEBUG_FLAG
+    local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
+    local PRIMARY_MASTER=primary.master.$ZONE_NAME
+    local RECORD_NAME=$(_random_alphanumeric_chars 11)
+    local RECORD_IP=$(_random_ipv4_octet).$(_random_ipv4_octet).$(_random_ipv4_octet).$(_random_ipv4_octet)
 
     if [ "$ENABLE_DEBUG" == "true" ]; then
         DEBUG_FLAG=-d
     fi
 
     # create forward zone
+    # create zone
+    create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" "$ZONE_NAME" "$PRIMARY_MASTER"
+
     # create A record with -p option
+    create_update-pdns-a-record.sh -p $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME $RECORD_IP
+
+    _wait_for_cache_expiry
+
     # assert A record and PTR record are there
+    local DIG_RECORD_IP
+    eval $($TEST_DIG $RECORD_NAME.$ZONE_NAME A | awk '
+        /[\t\s]A[\t\s]/{
+            if($1 == "'"$RECORD_NAME.$ZONE_NAME"'"){
+                print "DIG_RECORD_IP="$5
+            }
+        }
+    ')
+    assertEquals "A record IP mismatch" "$RECORD_IP" "$DIG_RECORD_IP"
+
+    local PTR_RECORD_NAME=$(get_ptr_host_part $RECORD_IP).$(get_ptr_zone_part $RECORD_IP)
+    local DIG_PTR_FQDN
+    eval $($TEST_DIG -x $RECORD_IP | awk '
+        /[\t\s]PTR[\t\s]/{
+            if($1 == "'"$PTR_RECORD_NAME"'"){
+                print "DIG_PTR_FQDN="$5;
+            }
+        }
+    ')
+    assertEquals "PTR record FQDN mismatch" "$RECORD_NAME.$ZONE_NAME" "$DIG_PTR_FQDN"
+
     # delete A record without -p option
+    delete-pdns-a-record.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" "$RECORD_NAME.$ZONE_NAME"
+
+    _wait_for_cache_expiry
+
     # assert that A record is gone and PTR record is still there
+    $TEST_DIG $RECORD_NAME.$ZONE_NAME A
+
+
     # create different A record with previous IP
     # assert A record is there
     # attempt to delete A record with -p option
@@ -121,6 +167,7 @@ testDeleteArecord(){
     # assert A record and PTR record are there
     # delete A record with -p option
     # assert that A and PTR records are gone
+    # delete zone
     fail "Test not fully implemented" #FIXME: placeholder
 }
 

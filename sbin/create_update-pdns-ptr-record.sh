@@ -20,7 +20,7 @@ Options:
 
 # 'declare' variables we set in @SHAREDIR@/pdns-api-script-functions.sh
 # just to keep the IDE happy
-declare PDNS_API_IP \
+declare PDNS_IP \
     PDNS_API_PORT \
     PDNS_API_KEY \
     DIG \
@@ -178,6 +178,6 @@ curl -s $CURL_VERBOSE\
     --header "X-API-Key: $PDNS_API_KEY"\
     --data @-\
     -w \\n%{http_code}\\n\
-    http://$PDNS_API_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$NEW_PTR_ZONE > "$CURL_OUTFILE" < "$CURL_INFILE"
+    http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$NEW_PTR_ZONE > "$CURL_OUTFILE" < "$CURL_INFILE"
 
 process_curl_output $? "Create / update PTR record failed:"
