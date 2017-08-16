@@ -80,11 +80,14 @@ while getopts ":t:pdC:h" flag; do
     esac
 done
 
-read_pdns_config "$PDNS_CONF"
-
 if $HELP; then
     echo "$USAGE"
     exit 0
+fi
+
+if ! read_pdns_config "$PDNS_CONF"; then
+    >&2 echo "Exiting."
+    exit 1
 fi
 
 shift $((OPTIND-1))

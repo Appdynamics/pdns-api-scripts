@@ -26,6 +26,7 @@ source @SHAREDIR@/pdns-api-script-functions.sh
 
 CURL_VERBOSE=
 DEBUG=false
+HELP=false
 
 input_errors=0
 while getopts ":dC:h" flag; do
@@ -48,7 +49,15 @@ while getopts ":dC:h" flag; do
     esac
 done
 
-read_pdns_config "$PDNS_CONF"
+if $HELP; then
+    echo "$USAGE"
+    exit 0
+fi
+
+if ! read_pdns_config "$PDNS_CONF"; then
+    >&2 echo "Exiting."
+    exit 1
+fi
 
 shift $((OPTIND-1))
 

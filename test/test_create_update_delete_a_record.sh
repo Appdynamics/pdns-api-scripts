@@ -96,7 +96,7 @@ testCreateUpdateARecord(){
     assertEquals "PTR record FQDN mismatch after update" "$RECORD_NAME.$ZONE_NAME" "$DIG_PTR_FQDN"
 
     # delete the zone
-    delete-pdns-zone.sh "$ZONE_NAME"
+    delete-pdns-zone.sh $DEBUG_FLAG "$PDNS_CONF_DIR/pdns.conf" "$ZONE_NAME"
 }
 
 testDeleteArecord(){

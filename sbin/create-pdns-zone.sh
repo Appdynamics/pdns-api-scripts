@@ -169,7 +169,15 @@ while getopts ":H:t:r:R:e:n:N:dC:h" flag; do
     esac
 done
 
-read_pdns_config "$PDNS_CONF"
+if $HELP; then
+    echo "$USAGE"
+    exit 0
+fi
+
+if ! read_pdns_config "$PDNS_CONF"; then
+    >&2 echo "Exiting."
+    exit 1
+fi
 
 if [ -z "$HOSTMASTER_EMAIL" ]; then
     HOSTMASTER_EMAIL=$(curl -s --header "X-API-KEY: $PDNS_API_KEY"\
@@ -179,11 +187,6 @@ if [ -z "$HOSTMASTER_EMAIL" ]; then
         >&2 echo "Hostmaster email not specified and 'default-soa-mail' not configured in pdns."
         ((input_errors++))
     fi
-fi
-
-if $HELP; then
-    echo "$USAGE"
-    exit 0
 fi
 
 shift $((OPTIND-1))
