@@ -138,7 +138,7 @@ cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
         [
             {
                 "name": "$A_RECORD_NAME",
-                "ttl": "$TTL"
+                "ttl": $TTL,
                 "type": "A",
                 "changetype": "REPLACE",
                 "records":
