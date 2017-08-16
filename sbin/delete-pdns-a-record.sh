@@ -8,8 +8,10 @@ delete-pdns-a-record.sh [options] hostname.zonename.tld.
 Deletes the specified, fully qualified hostname from PowerDNS.
 
 Options:
-    -p                      Delete complementary PTR record. (Warn if it didn't
-                            exist.)
+    -p                      Deletes complementary PTR record if it exists and
+                            matches the forward record.  Warns if PTR record
+                            does not exist.  Exits without changes and warns if
+                            A record and PTR record do not match.
     -d                      Enable additional debugging output.
     -C </path/to/pdns.conf> Path to alternate PowerDNS configuration file.
                             Default: @ETCDIR@/pdns/pdns.conf
