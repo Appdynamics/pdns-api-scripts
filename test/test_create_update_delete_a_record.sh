@@ -118,7 +118,6 @@ testDeleteARecord(){
     fi
 
     # create forward zone
-    # create zone
     create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" "$ZONE_NAME" "$PRIMARY_MASTER"
 
     # create A record with -p option
@@ -153,22 +152,120 @@ testDeleteARecord(){
 
     _wait_for_cache_expiry
 
-    # assert that A record is gone and PTR record is still there
-    $TEST_DIG $RECORD_NAME.$ZONE_NAME A
+    # assert that A record is gone
+    DIG_RECORD_IP=
+    eval $($TEST_DIG $RECORD_NAME.$ZONE_NAME A | awk '
+        /[\t\s]A[\t\s]/{
+            if($1 == "'"$RECORD_NAME.$ZONE_NAME"'"){
+                print "DIG_RECORD_IP="$5
+            }
+        }
+    ')
+    assertEquals "A record still present after delete" "" "$DIG_RECORD_IP"
 
+    # assert PTR record is still there
+    DIG_PTR_FQDN=
+    eval $($TEST_DIG -x $RECORD_IP | awk '
+        /[\t\s]PTR[\t\s]/{
+            if($1 == "'"$PTR_RECORD_NAME"'"){
+                print "DIG_PTR_FQDN="$5;
+            }
+        }
+    ')
+    assertEquals "PTR record not present, as expected, after A record deletion."\
+        "$RECORD_NAME.$ZONE_NAME" "$DIG_PTR_FQDN"
 
     # create different A record with previous IP
+    local OLD_RECORD_NAME=$RECORD_NAME
+    RECORD_NAME=$(_random_alphanumeric_chars 11)
+    create_update-pdns-a-record.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME $RECORD_IP
+
+    _wait_for_cache_expiry
+
     # assert A record is there
+    DIG_RECORD_IP=
+    eval $($TEST_DIG $RECORD_NAME.$ZONE_NAME A | awk '
+        /[\t\s]A[\t\s]/{
+            if($1 == "'"$RECORD_NAME.$ZONE_NAME"'"){
+                print "DIG_RECORD_IP="$5
+            }
+        }
+    ')
+    assertEquals "A record IP mismatch" "$RECORD_IP" "$DIG_RECORD_IP"
+
     # attempt to delete A record with -p option
+    local SCRIPT_OUTPUT=$(delete-pdns-a-record.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" -p $RECORD_NAME.$ZONE_NAME \
+        2>&1)
+
     # assert that delete-pdns-a-record.sh exited with appropriate warning
+    assertEquals "delete-pdns-a-record.sh did not fail with expected warning" \
+        "A record for $RECORD_NAME.$ZONE_NAME
+Does not match PTR record for $RECORD_IP
+Exiting without changes." \
+        "$SCRIPT_OUTPUT"
+
+    # nothing should have changed, but just in case it did...
+    _wait_for_cache_expiry
+
     # assert that mismatched A and PTR records are still present.
+    DIG_RECORD_IP=
+    eval $($TEST_DIG $RECORD_NAME.$ZONE_NAME A | awk '
+        /[\t\s]A[\t\s]/{
+            if($1 == "'"$RECORD_NAME.$ZONE_NAME"'"){
+                print "DIG_RECORD_IP="$5
+            }
+        }
+    ')
+    assertEquals "Unexpected A record change." "$RECORD_IP" "$DIG_RECORD_IP"
+
+    DIG_PTR_FQDN=
+    eval $($TEST_DIG -x $RECORD_IP | awk '
+        /[\t\s]PTR[\t\s]/{
+            if($1 == "'"$PTR_RECORD_NAME"'"){
+                print "DIG_PTR_FQDN="$5;
+            }
+        }
+    ')
+    assertEquals "Unexpected PTR record change." "$OLD_RECORD_NAME.$ZONE_NAME" "$DIG_PTR_FQDN"
+
     # delete A and PTR records individually
-    # create A record with -p option
-    # assert A record and PTR record are there
+    delete-pdns-a-record.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME
+    delete-pdns-ptr-record.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_IP
+
+    # create new A record with -p option
+    create_update-pdns-a-record.sh -p $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $RECORD_NAME.$ZONE_NAME $RECORD_IP
+
+    _wait_for_cache_expiry
+
     # delete A record with -p option
+    delete-pdns-a-record.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" -p $RECORD_NAME.$ZONE_NAME
+
+    _wait_for_cache_expiry
+
     # assert that A and PTR records are gone
+    DIG_RECORD_IP=
+    eval $($TEST_DIG $RECORD_NAME.$ZONE_NAME A | awk '
+        /[\t\s]A[\t\s]/{
+            if($1 == "'"$RECORD_NAME.$ZONE_NAME"'"){
+                print "DIG_RECORD_IP="$5
+            }
+        }
+    ')
+    assertEquals "A record still present after delete" "" "$DIG_RECORD_IP"
+
+    # assert PTR record is still there
+    DIG_PTR_FQDN=
+    eval $($TEST_DIG -x $RECORD_IP | awk '
+        /[\t\s]PTR[\t\s]/{
+            if($1 == "'"$PTR_RECORD_NAME"'"){
+                print "DIG_PTR_FQDN="$5;
+            }
+        }
+    ')
+    assertEquals "PTR record still present after delete" "" "$DIG_PTR_FQDN"
+
     # delete zone
-    fail "Test not fully implemented" #FIXME: placeholder
+    delete-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME
 }
 
 testCreateAAndPTRRecordWithDefaults(){
