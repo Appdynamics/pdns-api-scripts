@@ -1,6 +1,9 @@
 # Introduction
 `pdns-api-scripts` is a collection of shell scripts for manipulating records in PowerDNS via its REST API.
 
+# Installation
+(TBW)
+
 # USAGE
 
 (TBW) For now, it's enough to know that every script has a `-h` flag that provides usage information, and that there is
