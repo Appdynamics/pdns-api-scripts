@@ -56,7 +56,9 @@ _random_ipv4_octet(){
 
 _wait_for_cache_expiry(){
     local
-    >&2 echo "Waiting $SLEEP_TIME seconds for PDNS cache to expire"
+    if [ "$ENABLE_DEBUG" == "true" ]; then
+        >&2 echo "Waiting $SLEEP_TIME seconds for PDNS cache to expire"
+    fi
     sleep $SLEEP_TIME
 }
 
