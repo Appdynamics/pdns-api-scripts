@@ -5,7 +5,7 @@
 USAGE="\
 delete-pdns-a-record.sh [options] hostname.zonename.tld.
 
-Deletes the specified, fully qualified hostname from PowerDNS.
+Deletes the specified, fully qualified A record from PowerDNS.
 
 Options:
     -p                      Deletes complementary PTR record if it exists and
@@ -74,7 +74,7 @@ shift $((OPTIND-1))
 A_RECORD_NAME=$1
 
 # validate hostname
-if ! is_valid_dns_name "$A_RECORD_NAME"; then
+if ! is_valid_forward_dns_name "$A_RECORD_NAME"; then
     >&2 echo "'$A_RECORD_NAME' is not a correctly"
     >&2 echo "formatted, fully-qualified hostname."
     trailing_dot_msg

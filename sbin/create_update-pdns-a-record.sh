@@ -44,10 +44,6 @@ DEBUG=false
 DEBUG_FLAG=
 HELP=false
 
-
-# TTL_FLAG intentionally left empty.
-TTL_FLAG=
-
 input_errors=0
 while getopts ":t:pdC:h" flag; do
     case $flag in
@@ -96,7 +92,7 @@ A_RECORD_NAME="$1"
 A_RECORD_IP="$2"
 
 # validate hostname
-if ! is_valid_dns_name "$A_RECORD_NAME"; then
+if ! is_valid_forward_dns_name "$A_RECORD_NAME"; then
     >&2 echo "'$A_RECORD_NAME' is not a correctly"
     >&2 echo "formatted, fully-qualified hostname."
     trailing_dot_msg
@@ -128,11 +124,7 @@ if ! zone_exists $A_RECORD_ZONE; then
 fi
 
 if $MANAGE_PTR; then
-    # create/update PTR record
-    if [ -n "$TTL" ]; then
-        TTL_FLAG="-t $TTL"
-    fi
-    create_update-pdns-ptr-record.sh -C "$PDNS_CONF" -c $DEBUG_FLAG $TTL_FLAG $A_RECORD_IP $A_RECORD_NAME
+    create_update-pdns-ptr-record.sh -C "$PDNS_CONF" -c $DEBUG_FLAG -t $TTL $A_RECORD_IP $A_RECORD_NAME
 fi
 
 cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY

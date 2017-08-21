@@ -2,7 +2,7 @@
 
 #FIXME: add license header
 
-#FIXME: add NS record TTL flag
+#TODO: implement update functionality and rename to create_update-pdns-zone.sh
 USAGE="\
 create-pdns-zone.sh [options] zone.name.tld. primary.master.nameserver.tld.
         [supplementary.master.nameserver1.tld. ...]
@@ -89,6 +89,7 @@ HOSTMASTER_EMAIL=
 
 
 # Validate and process input
+# TODO: add *_CHANGED flags to support zone-update functionality
 input_errors=0
 while getopts ":H:t:r:R:e:n:N:dC:h" flag; do
     case $flag in
@@ -191,7 +192,7 @@ fi
 
 shift $((OPTIND-1))
 
-if is_valid_dns_name "$1"; then
+if is_valid_forward_dns_name "$1" || is_valid_reverse_dns_name "$1"; then
     ZONE_NAME=$1
 else
     >&2 echo "'$1' is not a correctly"
@@ -200,7 +201,7 @@ else
     ((input_errors++))
 fi
 
-if is_valid_dns_name "$2"; then
+if is_valid_forward_dns_name "$2"; then
     PRIMARY_MASTER=$2
 else
     >&2 echo "'$2' is not a correctly"
@@ -214,7 +215,7 @@ shift 2
 # grab and validate supplementary name server args
 i=0
 while [ -n "$1" ]; do
-    if is_valid_dns_name "$1"; then
+    if is_valid_forward_dns_name "$1"; then
         supplementary_dns[$i]=$1
     else
         >&2 echo "'$1' is not a correctly"
@@ -232,11 +233,17 @@ if [ $input_errors -gt 0 ]; then
 fi
 
 if zone_exists "$ZONE_NAME"; then
-    >&2 echo "Zone '$ZONE_NAME' already exists."
-    exit 1
+    #TODO: update existing zone
+    # dig existing zone metadata
+    # merge dig output with zone metadata changed by user
+    #  PATCH SOA
+    #  if any DNS record changed
+    #    PATCH NS records
+    #
+    >&2 echo "Zone '$ZONE_NAME' already exists." # TODO: delete after update functionality implemented
+    exit 1 # TODO: delete after update functionality implemented
 else
-    # FIXME: convert .nameservers to an RR set.
-
+    #TODO: move outside of if/else block once update functionality implemented
     CURL_INFILE="$(mktemp)"
     cat > "$CURL_INFILE" <<REQUEST_BODY_HEAD
 {

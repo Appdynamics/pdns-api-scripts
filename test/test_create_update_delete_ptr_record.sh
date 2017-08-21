@@ -43,6 +43,8 @@ testCreateUpdatePtrRecord(){
     TTL=86399
     create_update-pdns-ptr-record.sh -C "$PDNS_CONF_DIR/pdns.conf" $DEBUG_FLAG -t $TTL $PTR_IP $PTR_HOSTNAME
 
+    _wait_for_cache_expiry
+
     # assert that it updated
     eval $($TEST_DIG -x $PTR_IP | awk '
         /[\t\s]PTR[\t\s]/{

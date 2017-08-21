@@ -91,9 +91,14 @@ get_host_by_addr(){
     $DIG +short -p $PDNS_PORT @$PDNS_IP -x "$1" 2>/dev/null
 }
 
-# return 0 (true) if given exactly one argument, and $1 is a valid hostname
-is_valid_dns_name(){
-    [ ${#@} -eq 1 ] && [[ $1 =~ ^([-A-Za-z0-9]{2,}\.)+$ ]] || [[ $1 =~ ^([0-9]{1,3}\.){1,4}in-addr\.arpa\.$ ]]
+# return 0 (true) if given exactly one argument, and $1 is a valid forward DNS name
+is_valid_forward_dns_name(){
+    [ ${#@} -eq 1 ] && [[ $1 =~ ^([-A-Za-z0-9]{2,}\.)+$ ]]
+}
+
+# return 0 (true) if given exactly one argument, and $1 is a valid reverse hostname
+is_valid_reverse_dns_name(){
+    [ ${#@} -eq 1 ] && [[ $1 =~ ^([0-9]{1,3}\.){1,4}in-addr\.arpa\.$ ]]
 }
 
 is_valid_ipv4_address(){

@@ -66,13 +66,14 @@ if [ $input_errors -gt 0 ]; then
     exit $input_errors
 fi
 
-if is_valid_dns_name "$1"; then
-    # TODO: report on non-zero curl exit status, (connection failures), and exit
+if is_valid_forward_dns_name "$1" || is_valid_reverse_dns_name "$1"; then
     curl -s $CURL_VERBOSE\
         --request DELETE\
         --header "X-API-Key: $PDNS_API_KEY"\
-        http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1
-    exit $?
+        -w \\n%{http_code}\\n\
+        http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1 >$CURL_OUTFILE
+
+    process_curl_output $? "Failed to delete zone $1"
 else
     >&2 echo "'$1' is not a correctly"
     >&2 echo "formatted or fully-qualified zone name."

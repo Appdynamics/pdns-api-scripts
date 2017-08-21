@@ -101,7 +101,7 @@ else
     ((input_errors++))
 fi
 
-if is_valid_dns_name "$2"; then
+if is_valid_forward_dns_name "$2"; then
     NEW_PTR_HOSTNAME=$2
 else
     >&2 echo "'$2' is not a correctly"
