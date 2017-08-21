@@ -1,5 +1,17 @@
 #@IgnoreInspection BashAddShebang
-#FIXME: add license header
+# Copyright 2017, AppDynamics LLC and its affiliates
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 testCreateAndDeleteZone(){
     local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
@@ -23,7 +35,6 @@ testCreateAndDeleteZone(){
     create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" -H $HOSTMASTER_EMAIL -t $TTL -r $REFRESH \
         -R $RETRY -e $EXPIRY -n $NEG_TTL -N $NS_TTL $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
-    # FIXME: dig it and assert we got what we expected
     # dig ... AXFR prints SOA records on the first and last line by design
     local DIG_OUT="$($TEST_DIG +onesoa $ZONE_NAME AXFR)"
     if [ "$DIG_OUT" == "; Transfer failed." ]; then
@@ -108,7 +119,6 @@ testCreateAndDeleteZoneWithDefaults(){
     # create a zone and exercise all script params
     create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_CONF_DIR/pdns.conf" $ZONE_NAME $PRIMARY_MASTER $MASTER_2 $MASTER_3
 
-    # FIXME: dig it and assert we got what we expected
     # dig ... AXFR prints SOA records on the first and last line by design
     local DIG_OUT="$($TEST_DIG +onesoa $ZONE_NAME AXFR)"
     if [ "$DIG_OUT" == "; Transfer failed." ]; then
