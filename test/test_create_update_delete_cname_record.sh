@@ -120,7 +120,7 @@ testCreateDeleteAtCnameRecord(){
         $RECORD_NAME $CNAME_TARGET 2>"$SCRIPT_STDERR"
 
     # assert that the creation attempt failed because the zone didn't exist
-    assertEquals  "Error: Zone '$ZONE_NAME' does not exist." "$(head -1 "$SCRIPT_STDERR")"
+    assertEquals  "Error: Zone '$ZONE_SUFFIX' does not exist." "$(head -1 "$SCRIPT_STDERR")"
     rm -f "$SCRIPT_STDERR"
 
     # create zone
