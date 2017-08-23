@@ -129,7 +129,6 @@ fi
 
 if zone_exists $A_RECORD_NAME; then
     A_RECORD_ZONE=$A_RECORD_NAME
-    A_RECORD_NAME="@"
 else
     A_RECORD_ZONE=`get_zone_part $A_RECORD_NAME`
 fi

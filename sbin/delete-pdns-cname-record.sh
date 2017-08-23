@@ -97,7 +97,6 @@ fi
 
 if zone_exists "$CNAME"; then
     CNAME_ZONE="$CNAME"
-    CNAME="@"
 else
     CNAME_ZONE=$(get_zone_part "$CNAME")
 fi
