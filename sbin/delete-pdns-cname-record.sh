@@ -95,7 +95,11 @@ if ! is_valid_forward_dns_name "$CNAME"; then
     ((input_errors++))
 fi
 
-CNAME_ZONE=$(get_zone_part "$CNAME")
+if zone_exists "$CNAME"; then
+    CNAME_ZONE="$CNAME"
+else
+    CNAME_ZONE=$(get_zone_part "$CNAME")
+fi
 
 if [ $input_errors -gt 0 ]; then
     >&2 cat <<USAGE_MSG

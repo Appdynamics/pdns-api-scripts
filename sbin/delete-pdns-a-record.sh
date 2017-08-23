@@ -111,8 +111,6 @@ if [ -z "$A_RECORD_IP" ]; then
     exit 1
 fi
 
-ZONE=$(get_zone_part $A_RECORD_NAME)
-
 PTR_FQDN=$(get_host_by_addr $A_RECORD_IP)
 if $DELETE_PTR; then
     if [ -n "$PTR_FQDN" ]; then
@@ -127,6 +125,12 @@ if $DELETE_PTR; then
         >&2 echo "does not exist.  Unable to delete."
         DELETE_PTR=false
     fi
+fi
+
+if zone_exists $A_RECORD_NAME; then
+    A_RECORD_ZONE=$A_RECORD_NAME
+else
+    A_RECORD_ZONE=`get_zone_part $A_RECORD_NAME`
 fi
 
 CURL_OUTFILE="$(mktemp)"
@@ -155,7 +159,7 @@ curl -s $CURL_VERBOSE\
     --header "X-API-Key: $PDNS_API_KEY"\
     --data @-\
     -w \\n%{http_code}\\n\
-    http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$ZONE < "$CURL_INFILE" > "$CURL_OUTFILE"
+    http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$A_RECORD_ZONE < "$CURL_INFILE" > "$CURL_OUTFILE"
 
 if process_curl_output $? "Failed to Delete A record: $A_RECORD_NAME"; then
     if $DELETE_PTR; then

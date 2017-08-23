@@ -127,17 +127,22 @@ USAGE_MSG
     exit $input_errors
 fi
 
-# if zone doesn't exist, bail.
-A_RECORD_ZONE=`get_zone_part $A_RECORD_NAME`
-if ! zone_exists $A_RECORD_ZONE; then
-    >&2 echo "Error: Zone '$A_RECORD_ZONE' does not exist."
-    >&2 echo "Exiting."
-    exit 1
+if zone_exists $A_RECORD_NAME; then
+    A_RECORD_ZONE=$A_RECORD_NAME
+else
+    # if zone doesn't exist, bail.
+    A_RECORD_ZONE=`get_zone_part $A_RECORD_NAME`
+    if ! zone_exists $A_RECORD_ZONE; then
+        >&2 echo "Error: Zone '$A_RECORD_ZONE' does not exist."
+        >&2 echo "Exiting."
+        exit 1
+    fi
 fi
 
 if $MANAGE_PTR; then
     create_update-pdns-ptr-record.sh -C "$PDNS_CONF" -c $DEBUG_FLAG -t $TTL $A_RECORD_IP $A_RECORD_NAME
 fi
+
 
 cat > "$CURL_INFILE" <<PATCH_REQUEST_BODY
 {

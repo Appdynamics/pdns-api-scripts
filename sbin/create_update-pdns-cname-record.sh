@@ -106,13 +106,16 @@ if ! is_valid_forward_dns_name "$TARGET"; then
     ((input_errors++))
 fi
 
-CNAME_ZONE=$(get_zone_part "$CNAME")
-
-# if zone doesn't exist, bail.
-if ! zone_exists "$CNAME_ZONE"; then
-    >&2 echo "Error: Zone '$CNAME_ZONE' does not exist."
-    >&2 echo "Exiting."
-    exit 1
+if zone_exists "$CNAME"; then
+    CNAME_ZONE=$CNAME
+else
+    CNAME_ZONE=$(get_zone_part "$CNAME")
+    # if zone doesn't exist, bail.
+    if ! zone_exists "$CNAME_ZONE"; then
+        >&2 echo "Error: Zone '$CNAME_ZONE' does not exist."
+        >&2 echo "Exiting."
+        exit 1
+    fi
 fi
 
 if [ $input_errors -gt 0 ]; then

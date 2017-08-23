@@ -94,7 +94,74 @@ testCreateUpdateDeleteCnameRecord(){
             }
         }
     ')
-    assertEquals "CNAME record still present after delete" "" "$DIG_RECORD_IP"
+    assertEquals "CNAME record still present after delete" "" "$DIG_CNAME_TARGET"
+
+    # delete zone
+    delete-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_TEST_DATA_ROOT/conf/pdns.conf" $ZONE_NAME
+}
+
+# test for '@' record creation and deletion
+testCreateDeleteAtCnameRecord(){
+    local DEBUG_FLAG
+    local ZONE_SUFFIX=$(_random_alphanumeric_chars 3).tld.
+    local ZONE_NAME=$(_random_alphanumeric_chars 3).$ZONE_SUFFIX
+    local PRIMARY_MASTER=primary.master.$ZONE_NAME
+    local RECORD_NAME=$ZONE_NAME
+    local CNAME_TARGET=$(_random_alphanumeric_chars 11).$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
+    local TTL=85399
+    local SCRIPT_STDERR="$(mktemp)"
+
+    if [ "$ENABLE_DEBUG" == "true" ]; then
+        DEBUG_FLAG=-d
+    fi
+
+    # attempt to create cname record
+    create_update-pdns-cname-record.sh $DEBUG_FLAG -C "$PDNS_TEST_DATA_ROOT/conf/pdns.conf" -t $TTL\
+        $RECORD_NAME $CNAME_TARGET 2>"$SCRIPT_STDERR"
+
+    # assert that the creation attempt failed because the zone didn't exist
+    assertEquals  "Error: Zone '$ZONE_SUFFIX' does not exist." "$(head -1 "$SCRIPT_STDERR")"
+    rm -f "$SCRIPT_STDERR"
+
+    # create zone
+    create-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_TEST_DATA_ROOT/conf/pdns.conf" $ZONE_NAME $PRIMARY_MASTER
+
+    # create cname
+    # attempt to create cname record
+    create_update-pdns-cname-record.sh $DEBUG_FLAG -C "$PDNS_TEST_DATA_ROOT/conf/pdns.conf" -t $TTL\
+        $RECORD_NAME $CNAME_TARGET
+
+    _wait_for_cache_expiry
+
+    # assert that the CNAME record was created with all script parameters present
+    local DIG_TTL
+    local DIG_CNAME_TARGET
+    eval $($TEST_DIG $RECORD_NAME CNAME | awk '
+        /[\t\s]CNAME[\t\s]/{
+            if($1 == "'"$RECORD_NAME"'"){
+                print "DIG_TTL="$2;
+                print "DIG_CNAME_TARGET="$5
+            }
+        }
+    ')
+    assertEquals "CNAME record ttl mismatch" "$TTL" "$DIG_TTL"
+    assertEquals "CNAME record target mismatch" "$CNAME_TARGET" "$DIG_CNAME_TARGET"
+
+    # delete cname
+    delete-pdns-cname-record.sh $DEBUG_FLAG -C "$PDNS_TEST_DATA_ROOT/conf/pdns.conf" $RECORD_NAME
+
+    _wait_for_cache_expiry
+
+    # assert that PTR record is gone
+    DIG_CNAME_TARGET=
+    eval $($TEST_DIG $RECORD_NAME CNAME | awk '
+        /[\t\s]CNAME[\t\s]/{
+            if($1 == "'"$RECORD_NAME"'"){
+                print "DIG_CNAME_TARGET="$5
+            }
+        }
+    ')
+    assertEquals "CNAME record still present after delete" "" "$DIG_CNAME_TARGET"
 
     # delete zone
     delete-pdns-zone.sh $DEBUG_FLAG -C "$PDNS_TEST_DATA_ROOT/conf/pdns.conf" $ZONE_NAME
