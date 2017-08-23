@@ -103,7 +103,8 @@ testCreateUpdateDeleteCnameRecord(){
 # test for '@' record creation and deletion
 testCreateDeleteAtCnameRecord(){
     local DEBUG_FLAG
-    local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
+    local ZONE_SUFFIX=$(_random_alphanumeric_chars 3).tld.
+    local ZONE_NAME=$(_random_alphanumeric_chars 3).$ZONE_SUFFIX
     local PRIMARY_MASTER=primary.master.$ZONE_NAME
     local RECORD_NAME=$ZONE_NAME
     local CNAME_TARGET=$(_random_alphanumeric_chars 11).$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.

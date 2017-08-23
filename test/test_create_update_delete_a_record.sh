@@ -126,7 +126,8 @@ testCreateAtAPtrRecord(){
     fi
 
     local DEBUG_FLAG
-    local ZONE_NAME=$(_random_alphanumeric_chars 3).$(_random_alphanumeric_chars 3).tld.
+    local ZONE_SUFFIX=$(_random_alphanumeric_chars 3).tld.
+    local ZONE_NAME=$(_random_alphanumeric_chars 3).$ZONE_SUFFIX
     local PRIMARY_MASTER=primary.master.$ZONE_NAME
     local RECORD_NAME=$ZONE_NAME
     local RECORD_IP=$(_random_ipv4_octet).$(_random_ipv4_octet).$(_random_ipv4_octet).$(_random_ipv4_octet)
@@ -142,7 +143,7 @@ testCreateAtAPtrRecord(){
         2>"$SCRIPT_STDERR"
 
     # assert that the creation attempt failed because the zone didn't exist
-    assertEquals  "Error: Zone '$ZONE_NAME' does not exist." "$(head -1 "$SCRIPT_STDERR")"
+    assertEquals  "Error: Zone '$ZONE_SUFFIX' does not exist." "$(head -1 "$SCRIPT_STDERR")"
     rm -f "$SCRIPT_STDERR"
 
     # create zone
