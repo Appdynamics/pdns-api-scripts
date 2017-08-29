@@ -32,7 +32,8 @@ PDNS_CONF=@ETCDIR@/pdns/pdns.conf
 # just to keep the IDE happy
 declare PDNS_IP \
     PDNS_API_PORT \
-    PDNS_API_KEY
+    PDNS_API_KEY \
+    CURL_OUTFILE
 
 source @SHAREDIR@/pdns-api-script-functions.sh
 
@@ -85,7 +86,10 @@ if is_valid_forward_dns_name "$1" || is_valid_reverse_dns_name "$1"; then
         -w \\n%{http_code}\\n\
         http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones/$1 >$CURL_OUTFILE
 
-    process_curl_output $? "Failed to delete zone $1"
+    if process_curl_output $? "Failed to delete zone $1"; then
+        # delete the zone from /etc/resolver/ (ignore errors or missing file)
+        rm -f /etc/resolver/$1
+    fi
 else
     >&2 echo "'$1' is not a correctly"
     >&2 echo "formatted or fully-qualified zone name."

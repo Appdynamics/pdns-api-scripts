@@ -97,6 +97,7 @@ NS_RECORD_TTL_MAX=2147483647
 
 HELP=false
 DEBUG=false
+ADD_TO_ETC_RESOLVER=false
 HOSTMASTER_EMAIL=
 
 
@@ -318,5 +319,17 @@ REQUEST_BODY_TAIL
         --data @-\
         http://$PDNS_IP:$PDNS_API_PORT/api/v1/servers/localhost/zones < "$CURL_INFILE" > "$CURL_OUTFILE"
 
-    process_curl_output $? "Create zone operation failed:"
+    if process_curl_output $? "Create zone operation failed:"; then
+        if [ -d /etc/resolver ]; then
+            # get IP address of primary master
+            PRIMARY_MASTER_IP=$(get_host_by_name $PRIMARY_MASTER)
+            if [ -n "$PRIMARY_MASTER_IP" ]; then
+                cat > /etc/resolver/$ZONE_NAME <<RESOLVER_CONFIG
+nameserver $PRIMARY_MASTER_IP
+RESOLVER_CONFIG
+            fi
+        else
+            exit 0
+        fi
+    fi
 fi
