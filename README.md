@@ -18,3 +18,5 @@ a `USAGE="..."` string at the top of every script.  Use the source, Luke.
 * PowerDNS REST API:
   * https://doc.powerdns.com/md/httpapi/README/
   * https://doc.powerdns.com/md/httpapi/api_spec/
+* OS X
+  * `resolver(5)` man page (`man 5 resolver`)
