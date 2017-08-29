@@ -15,6 +15,8 @@ a `USAGE="..."` string at the top of every script.  Use the source, Luke.
     * http://www.zytrax.com/books/dns/ch8/soa.html
     * http://www.zytrax.com/books/dns/ch8/ns.html
     * http://www.zytrax.com/books/dns/apa/ttl.html
+    * http://www.zytrax.com/books/dns/ch8/a.html
+    * http://www.zytrax.com/books/dns/ch8/cname.html
 * PowerDNS REST API:
   * https://doc.powerdns.com/md/httpapi/README/
   * https://doc.powerdns.com/md/httpapi/api_spec/
