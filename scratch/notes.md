@@ -6,5 +6,14 @@ config files for API, etc.
 * `debian`
   * `changelog` (maintained by `dch` see man page for more
   details)
+  * `compat` debhelper compatibility number: `10` (and nothing else)
   * `control` (package metadata, see `deb-control` man page for more
   details)
+  * `copyright` empty for now.  Will need to figure out
+  AppD-legal-friendly content here.
+  * `rules` (debian-specific build-system rules)
+  ```
+  #!/usr/bin/make -f
+   %:
+           dh $@ --buildsystem=cmake
+   ```
