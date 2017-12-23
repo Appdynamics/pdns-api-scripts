@@ -17,3 +17,5 @@ config files for API, etc.
    %:
            dh $@ --buildsystem=cmake
    ```
+  * `source` (directory)
+    * `format` (source tree layout version and type): `3.0 (git)`
