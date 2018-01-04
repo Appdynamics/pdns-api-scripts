@@ -12,17 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+PROJECT("pdns-api-scripts")
 cmake_minimum_required(VERSION 3.7)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "In-source builds are not allowed.  Please build in a new directory.")
 endif()
 
+#FIXME:  this needs to go to share / package_name
 if(NOT DEFINED SHAREDIR)
     if(CMAKE_INSTALL_PREFIX EQUAL "/")
-        set(SHAREDIR /usr/share)
+        set(SHAREDIR /usr/share/${CMAKE_PROJECT_NAME})
     else()
-        set(SHAREDIR ${CMAKE_INSTALL_PREFIX}/share)
+        set(SHAREDIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
     endif()
 endif()
 
@@ -39,5 +41,5 @@ if(NOT DEFINED ETCDIR)
 endif()
 
 add_subdirectory(sbin)
-add_subdirectory(share)
-add_subdirectory(test)
+add_subdirectory(share/pdns-api-scripts)
+add_subdirectory(share/pdns-api-scripts/test)

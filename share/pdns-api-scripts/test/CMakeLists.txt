@@ -13,13 +13,14 @@
 # limitations under the License.
 
 # expand installation path @VARIABLE@ references in shell scripts
-file(GLOB scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.sh")
+file(GLOB scripts RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.sh")
+
 foreach(script ${scripts})
     configure_file(${script} ${CMAKE_CURRENT_BINARY_DIR}/${script}.out @ONLY)
 endforeach()
 
 # link test scripts for individual programs
-file(GLOB test_scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "test_*.sh")
+file(GLOB test_scripts RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "test_*.sh")
 foreach(test_script ${test_scripts})
     file(READ ${CMAKE_CURRENT_BINARY_DIR}/pdns-api-test-functions.sh.out FILE_CONTENT)
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/${test_script} "${FILE_CONTENT}\n")
@@ -42,5 +43,5 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/test_all_api_scripts.sh "source ${USR_BI
 # install everything...
 file(GLOB install_scripts RELATIVE ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_BINARY_DIR}/test_*.sh")
 foreach(script ${install_scripts})
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${script} DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${script} DESTINATION ${SHAREDIR}/test)
 endforeach()

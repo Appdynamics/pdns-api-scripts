@@ -1,6 +1,7 @@
 Source: pdns-api-scripts
 Maintainer: Michael Przybylski <mike.przybylski@appdynamics.com>
 Bugs: https://github.com/appdynamics/pdns-api-scripts/issues
+Homepage: https://github.com/appdynamics/pdns-api-scripts
 Standards-Version: 0.2
 Section: net
 Priority: optional
@@ -10,7 +11,14 @@ Package: pdns-api-scripts
 Description: PowerDNS management scripts
  A collection of shell scripts for managing records in a 
  locally-installed PowerDNS installation via its REST API.
-Architecture: any
-Homepage: https://github.com/appdynamics/pdns-api-scripts
-Depends: bash (>= 4.0), pdns-backend-mysql | pdns-backend-odbc 
-  | pdns-backend-pgsql, pdns-server (>= 4.0), jq (>= 1.5), curl (>= 7.0)
+Architecture: all
+Depends: ${misc:Depends}, bash (>= 4.0), pdns-backend-mysql | pdns-backend-odbc
+  | pdns-backend-pgsql, pdns-server (>= 4.0), jq (>= 1.5), curl (>= 7.0),
+  dnsutils
+
+Package: pdns-api-scripts-test
+Description: shunit2 tests for PowerDNS management scripts
+ A collection of tests based on shunit2 for verifying the proper operation
+ of scripts in the pdns-api-scripts package.
+Architecture: all
+Depends: ${misc:Depends}, pdns-api-scripts, shunit2
