@@ -1,4 +1,4 @@
-# Copyright 2017, AppDynamics LLC and its affiliates
+# Copyright 2018, AppDynamics LLC and its affiliates
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# expand installation path @VARIABLE@ references in shell scripts
-file(GLOB scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*pdns*")
-foreach(script ${scripts})
-    configure_file(${script} ${CMAKE_CURRENT_BINARY_DIR}/${script} @ONLY)
-endforeach()
-
-foreach(script ${scripts})
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${script} DESTINATION ${SBINDIR})
-endforeach()

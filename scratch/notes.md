@@ -49,5 +49,14 @@ License: Apache-2
     `3.0 (native)`
   * `*package_name*.install` Useful for splitting a build into multiple
   packages.  See `dh_install` man page for more details.
+### Package documentation
+* `lintian` rightfully complains if you try to install a program without
+a man page.
+  * Documentation for writing man pages in native format is
+  fragmented between
+  `man-pages(7)`, (`man man-pages`), `man(7)`, (`man 7 man`), and
+  `groff(7)`, (`man 7 groff`).
+  * AsciiDoc? `a2x(1)`
+
 ## References
 *
